@@ -1,0 +1,646 @@
+---
+title: TypeScript Usage
+description: Leverage TypeScript types and interfaces for type-safe SDK usage
+---
+
+The GRVT JavaScript Client SDK is written in TypeScript and provides comprehensive type definitions for all API methods, WebSocket streams, and data structures. This guide shows you how to use TypeScript effectively with the SDK.
+
+## Installation with TypeScript
+
+The SDK includes TypeScript definitions out of the box:
+
+```bash
+npm install @grvt/client
+# or
+yarn add @grvt/client
+```
+
+<Note>
+No additional `@types` packages are needed. TypeScript definitions are bundled with the SDK.
+</Note>
+
+## Configuration Types
+
+### SDK Configuration
+
+```typescript
+import { IConfig } from '@grvt/client';
+
+const config: IConfig = {
+  host: 'https://api.grvt.io',
+  version: 'v1' // optional, defaults to 'v1'
+};
+
+// Type-safe validation
+import { validConfig } from '@grvt/client';
+
+const validatedConfig = validConfig(config);
+// Returns: { host: string, version: `v${number}` }
+```
+
+## MDG Types
+
+### Request and Response Types
+
+All MDG methods have strongly typed request and response interfaces:
+
+```typescript
+import { 
+  MDG,
+  IApiGetInstrumentRequest,
+  IApiGetInstrumentResponse,
+  IApiTickerRequest,
+  IApiTickerResponse,
+  IApiOrderbookLevelsRequest,
+  IApiOrderbookLevelsResponse
+} from '@grvt/client';
+
+const mdg = new MDG(config);
+
+// Type-safe instrument query
+const instrumentRequest: IApiGetInstrumentRequest = {
+  instrument: 'BTC_USDT_Perp'
+};
+
+const instrumentResponse: IApiGetInstrumentResponse = 
+  await mdg.instrument(instrumentRequest);
+
+// TypeScript knows the shape of the response
+console.log(instrumentResponse.result.instrument);
+console.log(instrumentResponse.result.tick_size);
+
+// Type-safe ticker request
+const tickerRequest: IApiTickerRequest = {
+  instrument: 'BTC_USDT_Perp'
+};
+
+const tickerResponse: IApiTickerResponse = 
+  await mdg.ticker(tickerRequest);
+
+// Full autocomplete and type checking
+const lastPrice = tickerResponse.result.last_price;
+const markPrice = tickerResponse.result.mark_price;
+const volume24h = tickerResponse.result.volume_24h;
+```
+
+### Candlestick Types
+
+```typescript
+import {
+  IApiCandlestickRequest,
+  IApiCandlestickResponse
+} from '@grvt/client';
+
+const candleRequest: IApiCandlestickRequest = {
+  instrument: 'BTC_USDT_Perp',
+  interval: '1H',
+  start_time: '1640000000000000',
+  end_time: '1640086400000000'
+};
+
+const candleResponse: IApiCandlestickResponse = 
+  await mdg.candlestick(candleRequest);
+
+// Strongly typed candlestick data
+candleResponse.result.forEach(candle => {
+  const [timestamp, open, high, low, close, volume] = candle;
+  console.log({ timestamp, open, high, low, close, volume });
+});
+```
+
+### Trade History Types
+
+```typescript
+import {
+  IApiTradeHistoryRequest,
+  IApiTradeHistoryResponse
+} from '@grvt/client';
+
+const tradeHistoryRequest: IApiTradeHistoryRequest = {
+  instrument: 'BTC_USDT_Perp',
+  start_time: '1640000000000000',
+  limit: 100
+};
+
+const tradeHistory: IApiTradeHistoryResponse = 
+  await mdg.tradesHistory(tradeHistoryRequest);
+
+// Type-safe trade data access
+tradeHistory.result.forEach(trade => {
+  console.log({
+    price: trade.price,
+    size: trade.size,
+    side: trade.side, // Type: 'BUY' | 'SELL'
+    timestamp: trade.timestamp
+  });
+});
+```
+
+## TDG Types
+
+### Order Types
+
+```typescript
+import {
+  TDG,
+  IApiCreateOrderRequest,
+  IApiCreateOrderResponse,
+  IApiCancelOrderRequest,
+  IApiCancelOrderResponse,
+  IApiOpenOrdersRequest,
+  IApiOpenOrdersResponse
+} from '@grvt/client';
+
+const tdg = new TDG(config);
+
+// Type-safe order creation
+const createOrderRequest: IApiCreateOrderRequest = {
+  sub_account_id: 'sub_account_123',
+  instrument: 'BTC_USDT_Perp',
+  size: '1.5',
+  limit_price: '45000',
+  side: 'BUY', // Type enforced: 'BUY' | 'SELL'
+  time_in_force: 'GTC', // Type enforced: 'GTC' | 'IOC' | 'FOK' | 'POST_ONLY'
+  order_type: 'LIMIT' // Type enforced: 'LIMIT' | 'MARKET'
+};
+
+const createOrderResponse: IApiCreateOrderResponse = 
+  await tdg.createOrder(createOrderRequest);
+
+const orderId: string = createOrderResponse.result.order_id;
+
+// Type-safe order cancellation
+const cancelRequest: IApiCancelOrderRequest = {
+  sub_account_id: 'sub_account_123',
+  order_id: orderId
+};
+
+const cancelResponse: IApiCancelOrderResponse = 
+  await tdg.cancelOrder(cancelRequest);
+```
+
+### Position Types
+
+```typescript
+import {
+  IApiPositionsRequest,
+  IApiPositionsResponse,
+  IApiSetSubAccountPositionMarginConfigRequest,
+  IApiSetSubAccountPositionMarginConfigResponse
+} from '@grvt/client';
+
+// Type-safe position query
+const positionsRequest: IApiPositionsRequest = {
+  sub_account_id: 'sub_account_123',
+  instrument: 'BTC_USDT_Perp'
+};
+
+const positionsResponse: IApiPositionsResponse = 
+  await tdg.positions(positionsRequest);
+
+// Strongly typed position data
+positionsResponse.result.forEach(position => {
+  console.log({
+    instrument: position.instrument,
+    size: position.size,
+    entry_price: position.entry_price,
+    unrealized_pnl: position.unrealized_pnl,
+    liquidation_price: position.liquidation_price
+  });
+});
+
+// Type-safe position configuration
+const configRequest: IApiSetSubAccountPositionMarginConfigRequest = {
+  sub_account_id: 'sub_account_123',
+  instrument: 'BTC_USDT_Perp',
+  margin_mode: 'ISOLATED', // Type enforced: 'CROSS' | 'ISOLATED'
+  leverage: '10'
+};
+
+const configResponse: IApiSetSubAccountPositionMarginConfigResponse = 
+  await tdg.setPositionConfig(configRequest);
+```
+
+### Account Types
+
+```typescript
+import {
+  IApiSubAccountSummaryRequest,
+  IApiSubAccountSummaryResponse,
+  IApiFillHistoryRequest,
+  IApiFillHistoryResponse
+} from '@grvt/client';
+
+// Type-safe account summary
+const summaryRequest: IApiSubAccountSummaryRequest = {
+  sub_account_id: 'sub_account_123'
+};
+
+const summary: IApiSubAccountSummaryResponse = 
+  await tdg.subAccountSummary(summaryRequest);
+
+console.log({
+  equity: summary.result.equity,
+  available_balance: summary.result.available_balance,
+  margin_usage: summary.result.margin_usage
+});
+
+// Type-safe fill history
+const fillRequest: IApiFillHistoryRequest = {
+  sub_account_id: 'sub_account_123',
+  instrument: 'BTC_USDT_Perp',
+  limit: 100
+};
+
+const fills: IApiFillHistoryResponse = 
+  await tdg.fillHistory(fillRequest);
+
+fills.result.forEach(fill => {
+  console.log({
+    order_id: fill.order_id,
+    price: fill.price,
+    size: fill.size,
+    fee: fill.fee,
+    side: fill.side // Strongly typed
+  });
+});
+```
+
+## WebSocket Types
+
+### Stream Enums
+
+```typescript
+import { EStream } from '@grvt/client';
+
+// All available streams as type-safe enum
+const streams = {
+  candle: EStream.CANDLE,
+  miniDelta: EStream.MINI_DELTA,
+  miniSnap: EStream.MINI_SNAP,
+  bookDelta: EStream.RPI_BOOK_DELTA,
+  bookSnap: EStream.RPI_BOOK_SNAP,
+  tickerDelta: EStream.TICKER_DELTA,
+  tickerSnap: EStream.TICKER_SNAP,
+  trade: EStream.TRADE,
+  order: EStream.ORDER,
+  state: EStream.STATE,
+  position: EStream.POSITION,
+  fill: EStream.FILL,
+  deposit: EStream.DEPOSIT,
+  transfer: EStream.TRANSFER,
+  withdrawal: EStream.WITHDRAWAL
+};
+```
+
+### WebSocket Request Types
+
+```typescript
+import {
+  WS,
+  EStream,
+  IWSCandleRequest,
+  IWSTickerRequest,
+  IWSBookRequest,
+  IWSTdgOrderRequest,
+  IWSTdgPositionRequest,
+  IWSTdgFillRequest
+} from '@grvt/client';
+
+const ws = new WS({ url: 'wss://ws.grvt.io' });
+
+// Type-safe candlestick subscription
+const candleRequest: IWSCandleRequest = {
+  stream: EStream.CANDLE,
+  params: {
+    instrument: 'BTC_USDT_Perp',
+    interval: '1H', // Type enforced
+    type: 'MARK' // Type enforced: 'MARK' | 'INDEX' | 'LAST'
+  },
+  onData: (candle) => {
+    // candle is strongly typed
+    console.log(candle.open, candle.high, candle.low, candle.close);
+  },
+  onError: (error) => {
+    console.error(error.message);
+  }
+};
+
+ws.subscribe(candleRequest);
+
+// Type-safe order subscription
+const orderRequest: IWSTdgOrderRequest = {
+  stream: EStream.ORDER,
+  params: {
+    sub_account_id: 'sub_account_123',
+    instrument: 'BTC_USDT_Perp'
+  },
+  onData: (order) => {
+    // order is fully typed
+    console.log({
+      order_id: order.order_id,
+      status: order.status,
+      filled_size: order.filled_size
+    });
+  }
+};
+
+ws.subscribe(orderRequest);
+```
+
+### WebSocket Feed Data Types
+
+```typescript
+import {
+  IWSCandlestickFeedDataV1,
+  IWSTickerFeedDataV1,
+  IWSOrderbookLevelsFeedDataV1,
+  IWSOrderFeedDataV1,
+  IWSPositionsFeedDataV1,
+  IWSFillFeedDataV1
+} from '@grvt/client';
+
+// Use feed data types directly
+function processCandlestick(
+  data: Required<IWSCandlestickFeedDataV1>['feed']
+) {
+  console.log({
+    timestamp: data.timestamp,
+    open: data.open,
+    high: data.high,
+    low: data.low,
+    close: data.close,
+    volume: data.volume
+  });
+}
+
+function processOrderUpdate(
+  data: Required<IWSOrderFeedDataV1>['feed']
+) {
+  console.log({
+    order_id: data.order_id,
+    status: data.status,
+    filled_size: data.filled_size,
+    remaining_size: data.remaining_size
+  });
+}
+```
+
+## Generic Types and Utilities
+
+### Message Handler Type
+
+```typescript
+import { TMessageHandler } from '@grvt/client';
+
+// Create typed message handlers
+const handleTicker: TMessageHandler<any> = (ticker) => {
+  console.log('Ticker update:', ticker);
+};
+
+const handleOrder: TMessageHandler<any> = (order) => {
+  console.log('Order update:', order);
+};
+```
+
+### Union Types for Flexibility
+
+```typescript
+import { TWSRequest } from '@grvt/client';
+
+// TWSRequest is a union of all possible WebSocket request types
+function createSubscription(request: TWSRequest): string {
+  return ws.subscribe(request);
+}
+
+// Type-safe with autocomplete
+const subId = createSubscription({
+  stream: EStream.TICKER_SNAP,
+  params: {
+    instrument: 'BTC_USDT_Perp',
+    rate: 1000
+  },
+  onData: (ticker) => console.log(ticker)
+});
+```
+
+## Advanced TypeScript Patterns
+
+### Type Guards
+
+```typescript
+import { IWSOrderFeedDataV1, IWSFillFeedDataV1 } from '@grvt/client';
+
+// Create type guards for runtime type checking
+function isOrderUpdate(
+  data: any
+): data is Required<IWSOrderFeedDataV1>['feed'] {
+  return 'order_id' in data && 'status' in data;
+}
+
+function isFillUpdate(
+  data: any
+): data is Required<IWSFillFeedDataV1>['feed'] {
+  return 'order_id' in data && 'price' in data && 'fee' in data;
+}
+
+// Use type guards
+function processUpdate(data: any) {
+  if (isOrderUpdate(data)) {
+    console.log('Order:', data.order_id, data.status);
+  } else if (isFillUpdate(data)) {
+    console.log('Fill:', data.order_id, data.price, data.size);
+  }
+}
+```
+
+### Generic Wrapper Functions
+
+```typescript
+import { MDG, TDG } from '@grvt/client';
+
+// Create type-safe wrapper functions
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3
+): Promise<T> {
+  let lastError: Error;
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+    }
+  }
+  
+  throw lastError!;
+}
+
+// Usage with full type safety
+const mdg = new MDG(config);
+
+const ticker = await withRetry(() => 
+  mdg.ticker({ instrument: 'BTC_USDT_Perp' })
+);
+// ticker is typed as IApiTickerResponse
+```
+
+### Custom Type Definitions
+
+```typescript
+import { IApiCreateOrderRequest } from '@grvt/client';
+
+// Extend SDK types for your application
+interface MyOrderRequest extends IApiCreateOrderRequest {
+  metadata?: {
+    strategy: string;
+    user_id: string;
+  };
+}
+
+interface OrderWithMetadata {
+  request: MyOrderRequest;
+  submitted_at: number;
+  response?: any;
+}
+
+// Use custom types
+const orders: OrderWithMetadata[] = [];
+
+function submitOrder(request: MyOrderRequest) {
+  orders.push({
+    request,
+    submitted_at: Date.now()
+  });
+  
+  return tdg.createOrder(request);
+}
+```
+
+## Type-Safe Error Handling
+
+```typescript
+import { WSError } from '@grvt/client';
+
+// Type guard for WebSocket errors
+function isWSError(error: unknown): error is WSError {
+  return error instanceof WSError;
+}
+
+// Type-safe error handling
+try {
+  const ticker = await mdg.ticker({ instrument: 'BTC_USDT_Perp' });
+  console.log(ticker.result);
+} catch (error) {
+  if (isWSError(error)) {
+    console.error('WebSocket error:', {
+      code: error.code,
+      status: error.status,
+      message: error.message
+    });
+  } else if (error instanceof Error) {
+    console.error('General error:', error.message);
+  } else {
+    console.error('Unknown error:', error);
+  }
+}
+```
+
+## Type Exports Reference
+
+All types are exported from the main package:
+
+```typescript
+import {
+  // Configuration
+  IConfig,
+  
+  // MDG Request/Response types
+  IApiGetInstrumentRequest,
+  IApiGetInstrumentResponse,
+  IApiTickerRequest,
+  IApiTickerResponse,
+  // ... and many more
+  
+  // TDG Request/Response types
+  IApiCreateOrderRequest,
+  IApiCreateOrderResponse,
+  IApiPositionsRequest,
+  IApiPositionsResponse,
+  // ... and many more
+  
+  // WebSocket types
+  IWSCandleRequest,
+  IWSTickerRequest,
+  IWSTdgOrderRequest,
+  IWSTdgPositionRequest,
+  // ... and many more
+  
+  // Enums
+  EStream,
+  
+  // Utilities
+  TMessageHandler,
+  TWSRequest,
+  WSError
+} from '@grvt/client';
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Enable Strict Type Checking">
+    Configure your `tsconfig.json` for maximum type safety:
+    
+    ```json
+    {
+      "compilerOptions": {
+        "strict": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true
+      }
+    }
+    ```
+  </Accordion>
+  
+  <Accordion title="Use Type Inference">
+    Let TypeScript infer types when possible:
+    
+    ```typescript
+    // Good: Type inferred from SDK method
+    const ticker = await mdg.ticker({ instrument: 'BTC_USDT_Perp' });
+    
+    // Unnecessary: Explicitly typing when not needed
+    const ticker: IApiTickerResponse = await mdg.ticker({ ... });
+    ```
+  </Accordion>
+  
+  <Accordion title="Create Domain-Specific Types">
+    Build application types on top of SDK types:
+    
+    ```typescript
+    import { IApiPositionsResponse } from '@grvt/client';
+    
+    type PositionWithMetrics = IApiPositionsResponse['result'][0] & {
+      roi: number;
+      duration: number;
+    };
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="book" href="/api/overview">
+    Explore complete API documentation
+  </Card>
+  <Card title="Example Projects" icon="code" href="/examples">
+    View example TypeScript projects using the SDK
+  </Card>
+</CardGroup>

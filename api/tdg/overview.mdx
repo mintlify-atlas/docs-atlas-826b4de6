@@ -1,0 +1,83 @@
+---
+title: "TDG Class Overview"
+description: "The main trading API client for the GRVT JavaScript SDK"
+---
+
+## Introduction
+
+The `TDG` class is the primary interface for interacting with the GRVT Trading API. It provides methods for managing orders, positions, account information, transfers, and vault operations.
+
+## Initialization
+
+The TDG class is initialized with a configuration object:
+
+```typescript
+import { TDG } from '@grvt/sdk';
+
+const tdg = new TDG({
+  host: 'https://api.grvt.io',
+  version: 'v1'
+});
+```
+
+## Configuration
+
+<ParamField path="config" type="IConfig" required>
+  Configuration object for the TDG client
+  
+  <Expandable title="properties">
+    <ParamField path="host" type="string" required>
+      The API host URL
+    </ParamField>
+    
+    <ParamField path="version" type="string" required>
+      The API version to use
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Properties
+
+### axios
+
+Access the underlying Axios instance used for HTTP requests:
+
+```typescript
+const axiosInstance = tdg.axios;
+```
+
+## Method Categories
+
+The TDG class provides methods organized into the following categories:
+
+- **[Orders](/api/tdg/orders)** - Create, cancel, and query orders
+- **[Positions](/api/tdg/positions)** - Manage positions and margin configuration
+- **[Account](/api/tdg/account)** - View account summaries, history, and performance metrics
+- **[Transfers](/api/tdg/transfers)** - Handle deposits, withdrawals, and internal transfers
+- **[Vault Operations](/api/tdg/vault-operations)** - Invest in and redeem from vaults
+
+## Error Handling
+
+All methods return Promises and use `Utils.coverApiError` for consistent error handling. Errors should be caught using standard Promise error handling:
+
+```typescript
+try {
+  const response = await tdg.createOrder(orderRequest);
+  console.log('Order created:', response);
+} catch (error) {
+  console.error('Order creation failed:', error);
+}
+```
+
+## Request Configuration
+
+All methods accept an optional `AxiosRequestConfig` parameter for customizing HTTP requests:
+
+```typescript
+const response = await tdg.createOrder(orderRequest, {
+  timeout: 5000,
+  headers: {
+    'Custom-Header': 'value'
+  }
+});
+```

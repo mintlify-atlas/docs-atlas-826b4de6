@@ -1,0 +1,348 @@
+---
+title: Request Types
+description: Common request interfaces for API operations
+---
+
+Request types used across the GRVT SDK for various API operations.
+
+## WebSocket Request Types
+
+### IWSCandleRequest
+
+Request interface for candlestick data subscription.
+
+```typescript
+interface IWSCandleRequest {
+  stream: `${EStream.CANDLE}`
+  params: {
+    interval: `${ECandlestickInterval}`
+    type: `${ECandlestickType}`
+    instrument: string
+  }
+  onData?: TMessageHandler<Required<IWSCandlestickFeedDataV1>['feed']>
+  onError?: (error: Error) => void
+}
+```
+
+<ParamField path="stream" type="'candle'" required>
+  Stream identifier for candlestick data
+</ParamField>
+
+<ParamField path="params.interval" type="ECandlestickInterval" required>
+  Candlestick interval (e.g., `CI_1_M`, `CI_5_M`, `CI_1_H`)
+</ParamField>
+
+<ParamField path="params.type" type="ECandlestickType" required>
+  Price type: `TRADE`, `MARK`, `INDEX`, or `MID`
+</ParamField>
+
+<ParamField path="params.instrument" type="string" required>
+  Instrument identifier
+</ParamField>
+
+<ParamField path="onData" type="TMessageHandler">
+  Callback function for candlestick updates
+</ParamField>
+
+<ParamField path="onError" type="(error: Error) => void">
+  Error handler callback
+</ParamField>
+
+### IWSBookRequest
+
+Request interface for orderbook subscription.
+
+```typescript
+interface IWSBookRequest {
+  stream: `${EStream.ORDERBOOK_DELTA}` | `${EStream.ORDERBOOK_SNAP}` | `${EStream.RPI_BOOK_DELTA}` | `${EStream.RPI_BOOK_SNAP}`
+  params: IWSOrderbookLevelsFeedSelectorV1
+  onData?: TMessageHandler<Required<IWSOrderbookLevelsFeedDataV1>['feed']>
+  onError?: (error: Error) => void
+}
+```
+
+<ParamField path="stream" type="string" required>
+  Stream type: `rpi.book.d`, `rpi.book.s`, or deprecated `book.d`, `book.s`
+</ParamField>
+
+<ParamField path="params" type="IWSOrderbookLevelsFeedSelectorV1" required>
+  Orderbook feed selector with instrument, rate, and depth parameters
+</ParamField>
+
+### IWSTickerRequest
+
+Request interface for ticker data subscription.
+
+```typescript
+interface IWSTickerRequest {
+  stream: `${EStream.TICKER_DELTA}` | `${EStream.TICKER_SNAP}`
+  params: IWSTickerFeedSelectorV1
+  onData?: TMessageHandler<Required<IWSTickerFeedDataV1>['feed']>
+  onError?: (error: Error) => void
+}
+```
+
+<ParamField path="stream" type="'ticker.d' | 'ticker.s'" required>
+  Delta or snapshot ticker stream
+</ParamField>
+
+<ParamField path="params" type="IWSTickerFeedSelectorV1" required>
+  Ticker feed selector with instrument and rate
+</ParamField>
+
+### IWSTradeRequest
+
+Request interface for public trade feed subscription.
+
+```typescript
+interface IWSTradeRequest {
+  stream: `${EStream.TRADE}`
+  params: IWSTradeFeedSelectorV1
+  onData?: TMessageHandler<Required<IWSTradeFeedDataV1>['feed']>
+  onError?: (error: Error) => void
+}
+```
+
+<ParamField path="stream" type="'trade'" required>
+  Trade stream identifier
+</ParamField>
+
+<ParamField path="params" type="IWSTradeFeedSelectorV1" required>
+  Trade feed selector with instrument and limit
+</ParamField>
+
+## Trading Data Request Types
+
+### IWSTdgOrderRequest
+
+Request interface for order updates subscription.
+
+```typescript
+interface IWSTdgOrderRequest {
+  stream: `${EStream.ORDER}`
+  params: {
+    sub_account_id: string
+    instrument?: string
+  }
+  onData?: TMessageHandler<Required<IWSOrderFeedDataV1>['feed']>
+  onError?: (error: Error) => void
+}
+```
+
+<ParamField path="params.sub_account_id" type="string" required>
+  Sub-account ID to monitor
+</ParamField>
+
+<ParamField path="params.instrument" type="string">
+  Instrument filter (optional, omit for all instruments)
+</ParamField>
+
+### IWSTdgOrderStateRequest
+
+Request interface for order state updates (lightweight alternative to order stream).
+
+```typescript
+interface IWSTdgOrderStateRequest {
+  stream: `${EStream.STATE}`
+  params: {
+    sub_account_id: string
+    instrument?: string
+  }
+  onData?: TMessageHandler<Required<IWSOrderStateFeedDataV1>['feed']>
+  onError?: (error: Error) => void
+}
+```
+
+<ParamField path="params.sub_account_id" type="string" required>
+  Sub-account ID to monitor
+</ParamField>
+
+<ParamField path="params.instrument" type="string">
+  Instrument filter (optional)
+</ParamField>
+
+### IWSTdgPositionRequest
+
+Request interface for position updates subscription.
+
+```typescript
+interface IWSTdgPositionRequest {
+  stream: `${EStream.POSITION}`
+  params: {
+    sub_account_id: string
+    instrument?: string
+  }
+  onData?: TMessageHandler<Required<IWSPositionsFeedDataV1>['feed']>
+  onError?: (error: Error) => void
+}
+```
+
+<ParamField path="params.sub_account_id" type="string" required>
+  Sub-account ID to monitor
+</ParamField>
+
+<ParamField path="params.instrument" type="string">
+  Instrument filter (optional)
+</ParamField>
+
+### IWSTdgFillRequest
+
+Request interface for private fill (execution) subscription.
+
+```typescript
+interface IWSTdgFillRequest {
+  stream: `${EStream.FILL}`
+  params: {
+    sub_account_id: string
+    instrument?: string
+  }
+  onData?: TMessageHandler<Required<IWSFillFeedDataV1>['feed']>
+  onError?: (error: Error) => void
+}
+```
+
+<ParamField path="params.sub_account_id" type="string" required>
+  Sub-account ID to monitor
+</ParamField>
+
+<ParamField path="params.instrument" type="string">
+  Instrument filter (optional)
+</ParamField>
+
+### IWSTdgDepositRequest
+
+Request interface for deposit notifications.
+
+```typescript
+interface IWSTdgDepositRequest {
+  stream: `${EStream.DEPOSIT}`
+  params: {
+    main_account_id: string
+  }
+  onData?: TMessageHandler<Required<IWSDepositFeedDataV1>['feed']>
+  onError?: (error: Error) => void
+}
+```
+
+<ParamField path="params.main_account_id" type="string" required>
+  Main account ID to monitor for deposits
+</ParamField>
+
+### IWSTdgTransferRequest
+
+Request interface for internal transfer notifications.
+
+```typescript
+interface IWSTdgTransferRequest {
+  stream: `${EStream.TRANSFER}`
+  params: {
+    main_account_id: string
+    sub_account_id?: string
+  }
+  onData?: TMessageHandler<Required<IWSTransferFeedDataV1>['feed']>
+  onError?: (error: Error) => void
+}
+```
+
+<ParamField path="params.main_account_id" type="string" required>
+  Main account ID to monitor
+</ParamField>
+
+<ParamField path="params.sub_account_id" type="string">
+  Sub-account ID filter (optional)
+</ParamField>
+
+### IWSTdgWithDrawalRequest
+
+Request interface for withdrawal notifications.
+
+```typescript
+interface IWSTdgWithDrawalRequest {
+  stream: `${EStream.WITHDRAWAL}`
+  params: {
+    main_account_id: string
+  }
+  onData?: TMessageHandler<Required<IWSWithdrawalFeedDataV1>['feed']>
+  onError?: (error: Error) => void
+}
+```
+
+<ParamField path="params.main_account_id" type="string" required>
+  Main account ID to monitor for withdrawals
+</ParamField>
+
+## Feed Selector Types
+
+### IWSCandlestickFeedSelectorV1
+
+```typescript
+interface IWSCandlestickFeedSelectorV1 {
+  instrument?: string
+  interval?: ECandlestickInterval
+  type?: ECandlestickType
+}
+```
+
+### IWSOrderbookLevelsFeedSelectorV1
+
+```typescript
+interface IWSOrderbookLevelsFeedSelectorV1 {
+  instrument?: string
+  rate?: number
+  depth?: number
+}
+```
+
+<ParamField path="instrument" type="string">
+  Instrument identifier
+</ParamField>
+
+<ParamField path="rate" type="number">
+  Minimum publishing rate in milliseconds
+</ParamField>
+
+<ParamField path="depth" type="number">
+  Number of orderbook levels per side (snapshot mode only)
+</ParamField>
+
+### IWSTradeFeedSelectorV1
+
+```typescript
+interface IWSTradeFeedSelectorV1 {
+  instrument?: string
+  limit?: number
+}
+```
+
+<ParamField path="instrument" type="string">
+  Instrument identifier
+</ParamField>
+
+<ParamField path="limit" type="number">
+  Maximum number of trades per update
+</ParamField>
+
+## Union Types
+
+### TWSRequest
+
+Union of all WebSocket request types.
+
+```typescript
+type TWSRequest =
+  | IWSCandleRequest
+  | IWSBookRequest
+  | IWSMiniRequest
+  | IWSTickerRequest
+  | IWSTradeRequest
+  | IWSTdgOrderGroupRequest
+  | IWSTdgOrderRequest
+  | IWSTdgOrderStateRequest
+  | IWSTdgPositionRequest
+  | IWSTdgFillRequest
+  | IWSTdgDepositRequest
+  | IWSTdgTransferRequest
+  | IWSTdgWithDrawalRequest
+```
+
+This union type is used by the `subscribe()` and `subscribes()` methods to accept any valid stream request.

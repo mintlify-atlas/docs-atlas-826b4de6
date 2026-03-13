@@ -1,0 +1,578 @@
+---
+title: "Account Methods"
+description: "View account summaries, history, and performance metrics"
+---
+
+## subAccountSummary
+
+Get a summary of a sub-account.
+
+```typescript
+subAccountSummary(payload: IApiSubAccountSummaryRequest, config?: AxiosRequestConfig): Promise<IApiSubAccountSummaryResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiSubAccountSummaryRequest" required>
+  The sub-account summary request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiSubAccountSummaryResponse">
+  Sub-account summary data
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#sub-account-summary)
+
+---
+
+## subAccountSummaryHistory
+
+Get historical sub-account summaries.
+
+```typescript
+subAccountSummaryHistory(payload: IApiQueryListSubAccountSummaryRequest, config?: AxiosRequestConfig): Promise<IApiQueryListSubAccountSummaryResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiQueryListSubAccountSummaryRequest" required>
+  The query request for sub-account summary history
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiQueryListSubAccountSummaryResponse">
+  Historical sub-account summaries
+</ResponseField>
+
+---
+
+## subAccountHistory
+
+Get detailed history for a sub-account.
+
+```typescript
+subAccountHistory(payload: IApiSubAccountHistoryRequest, config?: AxiosRequestConfig): Promise<IApiSubAccountHistoryResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiSubAccountHistoryRequest" required>
+  The sub-account history request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiSubAccountHistoryResponse">
+  Sub-account history data
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#sub-account-history)
+
+---
+
+## fillHistory
+
+Query trade fill history.
+
+```typescript
+fillHistory(payload: IApiFillHistoryRequest, config?: AxiosRequestConfig): Promise<IApiFillHistoryResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiFillHistoryRequest" required>
+  The fill history request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiFillHistoryResponse">
+  Fill history data
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/market_data_api/#trade-history)
+
+---
+
+## fundingAccountSummary
+
+Get funding account summary.
+
+```typescript
+fundingAccountSummary(config?: AxiosRequestConfig): Promise<IApiFundingAccountSummaryResponse>
+```
+
+### Parameters
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiFundingAccountSummaryResponse">
+  Funding account summary data
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#funding-account-summary)
+
+---
+
+## fundingAccountSummaryHistory
+
+Get historical funding account summaries.
+
+```typescript
+fundingAccountSummaryHistory(payload: IApiQueryListFundingAccountSummaryRequest, config?: AxiosRequestConfig): Promise<IApiQueryListFundingAccountSummaryResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiQueryListFundingAccountSummaryRequest" required>
+  The query request for funding account history
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiQueryListFundingAccountSummaryResponse">
+  Historical funding account summaries
+</ResponseField>
+
+---
+
+## aggregatedAccountSummary
+
+Get aggregated account summary across all sub-accounts.
+
+```typescript
+aggregatedAccountSummary(config?: AxiosRequestConfig): Promise<IApiAggregatedAccountSummaryResponse>
+```
+
+### Parameters
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiAggregatedAccountSummaryResponse">
+  Aggregated account summary data
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#aggregated-account-summary)
+
+---
+
+## authorizeBuilder
+
+Authorize a builder to execute trades on behalf of the account.
+
+```typescript
+authorizeBuilder(payload: IApiAuthorizeBuilderRequest, config?: AxiosRequestConfig): Promise<IAckResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiAuthorizeBuilderRequest" required>
+  The builder authorization request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IAckResponse">
+  Acknowledgment response
+</ResponseField>
+
+---
+
+## getAuthorizedBuilders
+
+Get list of authorized builders.
+
+```typescript
+getAuthorizedBuilders(config?: AxiosRequestConfig): Promise<IApiGetAuthorizedBuildersResponse>
+```
+
+### Parameters
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiGetAuthorizedBuildersResponse">
+  List of authorized builders
+</ResponseField>
+
+---
+
+## builderFillHistory
+
+Query builder fill history.
+
+```typescript
+builderFillHistory(payload: IApiBuilderFillHistoryRequest, config?: AxiosRequestConfig): Promise<IApiBuilderFillHistoryResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiBuilderFillHistoryRequest" required>
+  The builder fill history request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiBuilderFillHistoryResponse">
+  Builder fill history data
+</ResponseField>
+
+---
+
+## socializedLossStatus
+
+Get socialized loss status.
+
+```typescript
+socializedLossStatus(config?: AxiosRequestConfig): Promise<IApiSocializedLossStatusResponse>
+```
+
+### Parameters
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiSocializedLossStatusResponse">
+  Socialized loss status information
+</ResponseField>
+
+---
+
+## tradingPerformance
+
+Query trading performance metrics.
+
+```typescript
+tradingPerformance(payload: IApiQueryTradingPerformanceRequest, config?: AxiosRequestConfig): Promise<IApiQueryTradingPerformanceResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiQueryTradingPerformanceRequest" required>
+  The trading performance query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiQueryTradingPerformanceResponse">
+  Trading performance data
+</ResponseField>
+
+---
+
+## tradingPerformanceTrend
+
+Query trading performance trend over time.
+
+```typescript
+tradingPerformanceTrend(payload: IApiQueryTradingPerformanceTrendRequest, config?: AxiosRequestConfig): Promise<IApiQueryTradingPerformanceTrendResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiQueryTradingPerformanceTrendRequest" required>
+  The performance trend query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiQueryTradingPerformanceTrendResponse">
+  Trading performance trend data
+</ResponseField>
+
+---
+
+## tradingPerformanceSummary
+
+Get summary of trading performance.
+
+```typescript
+tradingPerformanceSummary(payload: IApiQueryTradingPerformanceSummaryRequest, config?: AxiosRequestConfig): Promise<IApiQueryTradingPerformanceSummaryResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiQueryTradingPerformanceSummaryRequest" required>
+  The performance summary query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiQueryTradingPerformanceSummaryResponse">
+  Trading performance summary
+</ResponseField>
+
+---
+
+## assetExposure
+
+Query asset exposure over time.
+
+```typescript
+assetExposure(payload: IApiTimedAssetExposureRequest, config?: AxiosRequestConfig): Promise<IApiTimedAssetExposureResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiTimedAssetExposureRequest" required>
+  The asset exposure query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiTimedAssetExposureResponse">
+  Asset exposure data
+</ResponseField>
+
+---
+
+## accountTodayPerformance
+
+Get today's account performance.
+
+```typescript
+accountTodayPerformance(payload: IApiQueryAccountTodayPerformanceRequest, config?: AxiosRequestConfig): Promise<IApiQueryAccountTodayPerformanceResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiQueryAccountTodayPerformanceRequest" required>
+  The query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiQueryAccountTodayPerformanceResponse">
+  Today's account performance
+</ResponseField>
+
+---
+
+## accountPerformanceTrend
+
+Get account performance trend.
+
+```typescript
+accountPerformanceTrend(payload: IApiQueryAccountPerformanceTrendRequest, config?: AxiosRequestConfig): Promise<IApiQueryAccountPerformanceTrendResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiQueryAccountPerformanceTrendRequest" required>
+  The trend query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiQueryAccountPerformanceTrendResponse">
+  Account performance trend data
+</ResponseField>
+
+---
+
+## accountPerformance
+
+Get account performance metrics.
+
+```typescript
+accountPerformance(payload: IApiQueryAccountPerformanceRequest, config?: AxiosRequestConfig): Promise<IApiQueryAccountPerformanceResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiQueryAccountPerformanceRequest" required>
+  The performance query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiQueryAccountPerformanceResponse">
+  Account performance data
+</ResponseField>
+
+---
+
+## accountDailyPerformance
+
+Get daily account performance.
+
+```typescript
+accountDailyPerformance(payload: IApiQueryAccountDailyPerformanceRequest, config?: AxiosRequestConfig): Promise<IApiQueryAccountDailyPerformanceResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiQueryAccountDailyPerformanceRequest" required>
+  The daily performance query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiQueryAccountDailyPerformanceResponse">
+  Daily account performance data
+</ResponseField>
+
+---
+
+## subAccountDailyPerformance
+
+Get daily performance for a sub-account.
+
+```typescript
+subAccountDailyPerformance(payload: IApiQuerySubAccountDailyPerformanceRequest, config?: AxiosRequestConfig): Promise<IApiQuerySubAccountDailyPerformanceResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiQuerySubAccountDailyPerformanceRequest" required>
+  The sub-account daily performance request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiQuerySubAccountDailyPerformanceResponse">
+  Sub-account daily performance data
+</ResponseField>
+
+---
+
+## subAccountTodayPerformance
+
+Get today's performance for a sub-account.
+
+```typescript
+subAccountTodayPerformance(payload: IApiQuerySubAccountTodayPerformanceRequest, config?: AxiosRequestConfig): Promise<IApiQuerySubAccountTodayPerformanceResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiQuerySubAccountTodayPerformanceRequest" required>
+  The sub-account today performance request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiQuerySubAccountTodayPerformanceResponse">
+  Sub-account today's performance data
+</ResponseField>
+
+---
+
+## subAccountRiskMetric
+
+Get risk metrics for a sub-account.
+
+```typescript
+subAccountRiskMetric(payload: IApiQueryTradingAccountRiskMetricRequest, config?: AxiosRequestConfig): Promise<IApiQueryTradingAccountRiskMetricResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiQueryTradingAccountRiskMetricRequest" required>
+  The risk metric query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiQueryTradingAccountRiskMetricResponse">
+  Risk metric data
+</ResponseField>

@@ -1,80 +1,315 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Get started with the GRVT JavaScript Client in minutes
 ---
 
-## Get started in three steps
+This quickstart guide will walk you through setting up the GRVT JavaScript Client and making your first API calls.
 
-Get your documentation site running locally and make your first customization.
+## Installation
 
-### Step 1: Set up your local environment
+First, install the package using your preferred package manager:
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+<CodeGroup>
+```bash npm
+npm install @grvt/client
+```
+```bash yarn
+yarn add @grvt/client
+```
+```bash pnpm
+pnpm add @grvt/client
+```
+</CodeGroup>
+
+## Basic Setup
+
+<Steps>
+  <Step title="Import the SDK">
+    Import the GRVT client in your JavaScript or TypeScript file:
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+    ```typescript
+    import GRVT from '@grvt/client'
+    ```
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+    For CommonJS:
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    ```javascript
+    const GRVT = require('@grvt/client')
+    ```
+  </Step>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+  <Step title="Initialize the Clients">
+    Create instances of the Market Data Gateway (MDG) and/or Trading Data Gateway (TDG):
+    
+    ```typescript
+    // Market Data Gateway - for accessing market data
+    const mdg = new GRVT.MDG({
+      host: 'https://market-data.grvt.io',
+      version: 'v1'
+    })
+    
+    // Trading Data Gateway - for trading operations
+    const tdg = new GRVT.TDG({
+      host: 'https://trading.grvt.io',
+      version: 'v1'
+    })
+    ```
+  </Step>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+  <Step title="Make Your First Request">
+    Let's fetch all available instruments:
+    
+    ```typescript
+    async function getInstruments() {
+      try {
+        const response = await mdg.allInstruments({})
+        console.log('Available instruments:', response.result)
+      } catch (error) {
+        console.error('Error fetching instruments:', error.message)
+      }
+    }
+    
+    getInstruments()
+    ```
+  </Step>
+</Steps>
 
-### Step 3: Go live
+## Common Use Cases
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+### Getting Market Data
 
-## Next steps
+Fetch real-time ticker information for a specific instrument:
 
-Now that you have your docs running, explore these key features:
+```typescript
+async function getTickerData() {
+  const ticker = await mdg.ticker({
+    instrument: 'BTC-USD-PERP'
+  })
+  
+  console.log(`Current price: ${ticker.result.last_price}`)
+  console.log(`24h volume: ${ticker.result.volume_24h}`)
+}
+```
+
+### Getting Order Book Data
+
+Retrieve current order book levels:
+
+```typescript
+async function getOrderBook() {
+  const orderBook = await mdg.orderBook({
+    instrument: 'BTC-USD-PERP',
+    limit: 10  // Top 10 levels
+  })
+  
+  console.log('Bids:', orderBook.result.bids)
+  console.log('Asks:', orderBook.result.asks)
+}
+```
+
+### Fetching Candlestick Data
+
+Get historical OHLCV data:
+
+```typescript
+async function getCandlesticks() {
+  const candles = await mdg.candlestick({
+    instrument: 'BTC-USD-PERP',
+    interval: '1H',  // 1-hour candles
+    limit: 24        // Last 24 hours
+  })
+  
+  for (const candle of candles.result) {
+    console.log(`Time: ${candle.time}, Open: ${candle.open}, Close: ${candle.close}`)
+  }
+}
+```
+
+## Trading Operations
+
+<Warning>
+Trading operations require proper authentication. Make sure you have configured your API credentials correctly.
+</Warning>
+
+### Viewing Your Account
+
+Get your account summary:
+
+```typescript
+async function getAccountSummary() {
+  const summary = await tdg.subAccountSummary({
+    sub_account_id: 'your-sub-account-id'
+  })
+  
+  console.log('Account balance:', summary.result.total_equity)
+  console.log('Available margin:', summary.result.available_margin)
+}
+```
+
+### Viewing Positions
+
+Check your current positions:
+
+```typescript
+async function getPositions() {
+  const positions = await tdg.positions({
+    sub_account_id: 'your-sub-account-id'
+  })
+  
+  for (const position of positions.result) {
+    console.log(`${position.instrument}: ${position.size} @ ${position.entry_price}`)
+  }
+}
+```
+
+### Creating an Order
+
+Place a limit order:
+
+```typescript
+async function placeOrder() {
+  const order = await tdg.createOrder({
+    sub_account_id: 'your-sub-account-id',
+    instrument: 'BTC-USD-PERP',
+    size: '0.1',      // 0.1 BTC
+    limit_price: '45000',
+    time_in_force: 'GTC',  // Good Till Cancel
+    is_market: false
+  })
+  
+  console.log('Order created:', order.result.order_id)
+}
+```
+
+## Using WebSockets
+
+For real-time data streaming, use the WebSocket client:
+
+```typescript
+import { WS, EStream } from '@grvt/client/ws'
+
+const ws = new WS('wss://market-data.grvt.io/ws')
+
+// Set up event handlers
+ws.onConnect(() => {
+  console.log('Connected to WebSocket')
+  
+  // Subscribe to ticker updates
+  ws.subscribe({
+    stream: EStream.MINI_TICKER,
+    params: {
+      feed: { instrument: 'BTC-USD-PERP' }
+    }
+  }, (data) => {
+    console.log('Ticker update:', data)
+  })
+})
+
+ws.onError((error) => {
+  console.error('WebSocket error:', error)
+})
+
+ws.onClose(() => {
+  console.log('WebSocket disconnected')
+})
+
+// Connect
+ws.connect()
+```
+
+## Complete Example
+
+Here's a complete example that combines multiple operations:
+
+```typescript
+import GRVT from '@grvt/client'
+
+async function main() {
+  // Initialize clients
+  const mdg = new GRVT.MDG({
+    host: 'https://market-data.grvt.io',
+    version: 'v1'
+  })
+  
+  const tdg = new GRVT.TDG({
+    host: 'https://trading.grvt.io',
+    version: 'v1'
+  })
+  
+  try {
+    // 1. Get all instruments
+    const instruments = await mdg.allInstruments({})
+    console.log(`Found ${instruments.result.length} instruments`)
+    
+    // 2. Get ticker for BTC-USD-PERP
+    const ticker = await mdg.ticker({
+      instrument: 'BTC-USD-PERP'
+    })
+    console.log(`BTC-USD-PERP price: ${ticker.result.last_price}`)
+    
+    // 3. Get order book
+    const orderBook = await mdg.orderBook({
+      instrument: 'BTC-USD-PERP',
+      limit: 5
+    })
+    console.log('Top 5 bids and asks:')
+    console.log('Bids:', orderBook.result.bids.slice(0, 5))
+    console.log('Asks:', orderBook.result.asks.slice(0, 5))
+    
+    // 4. Get your positions (requires authentication)
+    // const positions = await tdg.positions({
+    //   sub_account_id: 'your-sub-account-id'
+    // })
+    // console.log('Positions:', positions.result)
+    
+  } catch (error) {
+    console.error('Error:', error.message)
+  }
+}
+
+main()
+```
+
+## Next Steps
+
+Now that you have the basics, explore more advanced features:
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Market Data Guide" icon="chart-line" href="/guides/market-data">
+    Learn about all available market data endpoints
+  </Card>
+  <Card title="Trading Guide" icon="arrows-rotate" href="/guides/trading">
+    Explore order management and trading operations
+  </Card>
+  <Card title="WebSocket Guide" icon="signal-stream" href="/guides/websockets">
+    Set up real-time data streaming
+  </Card>
+  <Card title="TypeScript Usage" icon="code" href="/guides/typescript-usage">
+    Learn about TypeScript types and interfaces
+  </Card>
 </CardGroup>
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+## Error Handling
+
+Always wrap your API calls in try-catch blocks to handle errors gracefully:
+
+```typescript
+try {
+  const response = await mdg.ticker({ instrument: 'BTC-USD-PERP' })
+  // Process response
+} catch (error) {
+  if (error.response) {
+    // API error
+    console.error('API error:', error.message)
+    console.error('Error code:', error.response.data?.code)
+  } else if (error.request) {
+    // Network error
+    console.error('Network error:', error.message)
+  } else {
+    // Other error
+    console.error('Error:', error.message)
+  }
+}
+```
+
+For more details on error handling, see the [Error Handling guide](/concepts/error-handling).

@@ -1,0 +1,681 @@
+---
+title: WebSocket Examples
+description: Real-time data streaming with WebSocket connections for market data and account updates
+---
+
+## Overview
+
+The GRVT WebSocket API provides real-time streaming data for market feeds and account updates. WebSocket connections are more efficient than REST polling for frequently updated data.
+
+```typescript
+import { WS, EStream } from '@grvt/client';
+
+const ws = new WS({
+  url: 'wss://ws.grvt.io',
+  reconnectStrategy: (retries) => {
+    // Exponential backoff with max 30s
+    return Math.min(1000 * Math.pow(2, retries), 30000);
+  },
+  timeout: 30000
+});
+```
+
+## Connection Management
+
+### Connect and Disconnect
+
+```typescript
+// Connect to WebSocket
+ws.connect();
+
+// Wait for connection to be ready
+await ws.ready();
+console.log('WebSocket connected');
+
+// Disconnect when done
+ws.disconnect();
+```
+
+### Connection Event Handlers
+
+```typescript
+// Handle connection events
+ws.onConnect(() => {
+  console.log('WebSocket connected');
+});
+
+ws.onClose((event) => {
+  console.log('WebSocket closed:', event.code, event.reason);
+});
+
+ws.onError((error) => {
+  console.error('WebSocket error:', error);
+});
+
+// Connect
+ws.connect();
+```
+
+### Authentication for Private Streams
+
+```typescript
+// Set authentication parameters
+ws.setParams({
+  'api-key': 'YOUR_API_KEY',
+  'signature': 'YOUR_SIGNATURE',
+  'timestamp': Date.now().toString()
+});
+```
+
+## Market Data Streams
+
+### Subscribe to Ticker Updates
+
+<Tabs>
+  <Tab title="Ticker Snapshot">
+    ```typescript
+    // Subscribe to ticker snapshot (full ticker data)
+    const tickerSub = ws.subscribe({
+      stream: EStream.TICKER_SNAP,
+      params: {
+        instrument: 'BTC_USDT_Perp',
+        rate: 1000 // Update every 1000ms
+      },
+      onData: (ticker) => {
+        console.log('Price:', ticker.last_price);
+        console.log('24h Volume:', ticker.volume_24h);
+        console.log('Best Bid:', ticker.best_bid_price);
+        console.log('Best Ask:', ticker.best_ask_price);
+      },
+      onError: (error) => {
+        console.error('Ticker error:', error);
+      }
+    });
+
+    // Unsubscribe later
+    ws.unsubscribe(tickerSub);
+    ```
+  </Tab>
+  <Tab title="Ticker Delta">
+    ```typescript
+    // Subscribe to ticker delta (only changed fields)
+    const tickerDeltaSub = ws.subscribe({
+      stream: EStream.TICKER_DELTA,
+      params: {
+        instrument: 'BTC_USDT_Perp',
+        rate: 500
+      },
+      onData: (ticker) => {
+        // Only updated fields are present
+        if (ticker.last_price) {
+          console.log('Price updated:', ticker.last_price);
+        }
+        if (ticker.volume_24h) {
+          console.log('Volume updated:', ticker.volume_24h);
+        }
+      }
+    });
+    ```
+  </Tab>
+</Tabs>
+
+### Subscribe to Order Book
+
+<Tabs>
+  <Tab title="Book Snapshot">
+    ```typescript
+    // Subscribe to full order book snapshots
+    const bookSub = ws.subscribe({
+      stream: EStream.RPI_BOOK_SNAP,
+      params: {
+        instrument: 'BTC_USDT_Perp',
+        depth: 10, // Top 10 levels
+        rate: 100 // Update every 100ms
+      },
+      onData: (book) => {
+        console.log('\nOrder Book:');
+        console.log('Asks:');
+        book.asks?.forEach(ask => {
+          console.log(`  ${ask.price} x ${ask.size}`);
+        });
+        console.log('Bids:');
+        book.bids?.forEach(bid => {
+          console.log(`  ${bid.price} x ${bid.size}`);
+        });
+      }
+    });
+    ```
+  </Tab>
+  <Tab title="Book Delta">
+    ```typescript
+    // Subscribe to order book deltas (incremental updates)
+    const bookDeltaSub = ws.subscribe({
+      stream: EStream.RPI_BOOK_DELTA,
+      params: {
+        instrument: 'ETH_USDT_Perp',
+        rate: 100
+      },
+      onData: (delta) => {
+        // Process incremental changes
+        if (delta.bids) {
+          console.log('Bid updates:', delta.bids.length);
+        }
+        if (delta.asks) {
+          console.log('Ask updates:', delta.asks.length);
+        }
+      }
+    });
+    ```
+  </Tab>
+</Tabs>
+
+### Subscribe to Recent Trades
+
+```typescript
+const tradeSub = ws.subscribe({
+  stream: EStream.TRADE,
+  params: {
+    instrument: 'BTC_USDT_Perp',
+    limit: 100 // Keep last 100 trades
+  },
+  onData: (trades) => {
+    trades.forEach(trade => {
+      const arrow = trade.side === 'BUY' ? '🟢' : '🔴';
+      console.log(`${arrow} ${trade.side} ${trade.size} @ ${trade.price}`);
+    });
+  }
+});
+```
+
+### Subscribe to Candlestick Data
+
+```typescript
+const candleSub = ws.subscribe({
+  stream: EStream.CANDLE,
+  params: {
+    instrument: 'BTC_USDT_Perp',
+    interval: '1m', // 1 minute candles
+    type: 'TRADE' // Based on trades
+  },
+  onData: (candles) => {
+    const latest = candles[candles.length - 1];
+    console.log('Latest Candle:');
+    console.log('  Open:', latest.open);
+    console.log('  High:', latest.high);
+    console.log('  Low:', latest.low);
+    console.log('  Close:', latest.close);
+    console.log('  Volume:', latest.volume);
+  }
+});
+```
+
+### Subscribe to Mini Ticker
+
+```typescript
+// Lightweight ticker for efficient updates
+const miniSub = ws.subscribe({
+  stream: EStream.MINI_SNAP,
+  params: {
+    instrument: 'BTC_USDT_Perp',
+    rate: 500
+  },
+  onData: (mini) => {
+    console.log(`${mini.instrument}: ${mini.last_price}`);
+  }
+});
+```
+
+## Account Data Streams
+
+<Note>
+Account data streams require authentication via the `setParams` method.
+</Note>
+
+### Subscribe to Order Updates
+
+```typescript
+// Subscribe to order events for a sub-account
+const orderSub = ws.subscribe({
+  stream: EStream.ORDER,
+  params: {
+    sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+    instrument: 'BTC_USDT_Perp'
+  },
+  onData: (orders) => {
+    orders.forEach(order => {
+      console.log('Order Update:');
+      console.log('  ID:', order.order_id);
+      console.log('  Status:', order.metadata.status);
+      console.log('  Filled:', order.metadata.filled_size);
+      console.log('  Remaining:', order.metadata.remaining_size);
+    });
+  },
+  onError: (error) => {
+    console.error('Order subscription error:', error);
+  }
+});
+```
+
+### Subscribe to Position Updates
+
+```typescript
+const positionSub = ws.subscribe({
+  stream: EStream.POSITION,
+  params: {
+    sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+    instrument: 'BTC_USDT_Perp'
+  },
+  onData: (positions) => {
+    positions.forEach(position => {
+      console.log('Position Update:');
+      console.log('  Instrument:', position.instrument);
+      console.log('  Size:', position.size);
+      console.log('  Entry Price:', position.avg_entry_price);
+      console.log('  Unrealized PnL:', position.unrealized_pnl);
+      console.log('  Liquidation Price:', position.liquidation_price);
+    });
+  }
+});
+```
+
+### Subscribe to Fill Notifications
+
+```typescript
+const fillSub = ws.subscribe({
+  stream: EStream.FILL,
+  params: {
+    sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+    instrument: 'BTC_USDT_Perp'
+  },
+  onData: (fills) => {
+    fills.forEach(fill => {
+      console.log('New Fill:');
+      console.log('  Order ID:', fill.order_id);
+      console.log('  Side:', fill.side);
+      console.log('  Size:', fill.size);
+      console.log('  Price:', fill.price);
+      console.log('  Fee:', fill.fee);
+    });
+  }
+});
+```
+
+### Subscribe to Deposit/Withdrawal Events
+
+```typescript
+// Deposit notifications
+const depositSub = ws.subscribe({
+  stream: EStream.DEPOSIT,
+  params: {
+    main_account_id: 'YOUR_ACCOUNT_ID'
+  },
+  onData: (deposits) => {
+    deposits.forEach(deposit => {
+      console.log('Deposit:', deposit.amount, deposit.currency);
+      console.log('Status:', deposit.status);
+    });
+  }
+});
+
+// Withdrawal notifications
+const withdrawalSub = ws.subscribe({
+  stream: EStream.WITHDRAWAL,
+  params: {
+    main_account_id: 'YOUR_ACCOUNT_ID'
+  },
+  onData: (withdrawals) => {
+    withdrawals.forEach(withdrawal => {
+      console.log('Withdrawal:', withdrawal.amount, withdrawal.currency);
+      console.log('Status:', withdrawal.status);
+    });
+  }
+});
+
+// Transfer notifications
+const transferSub = ws.subscribe({
+  stream: EStream.TRANSFER,
+  params: {
+    main_account_id: 'YOUR_ACCOUNT_ID',
+    sub_account_id: 'YOUR_SUB_ACCOUNT_ID'
+  },
+  onData: (transfers) => {
+    transfers.forEach(transfer => {
+      console.log('Transfer:', transfer.amount, transfer.currency);
+      console.log('From:', transfer.from_account_id);
+      console.log('To:', transfer.to_account_id);
+    });
+  }
+});
+```
+
+## Multiple Subscriptions
+
+### Batch Subscribe
+
+```typescript
+// Subscribe to multiple streams at once
+const subscriptions = ws.subscribes(
+  {
+    stream: EStream.TICKER_SNAP,
+    params: { instrument: 'BTC_USDT_Perp', rate: 1000 },
+    onData: (ticker) => console.log('BTC:', ticker.last_price)
+  },
+  {
+    stream: EStream.TICKER_SNAP,
+    params: { instrument: 'ETH_USDT_Perp', rate: 1000 },
+    onData: (ticker) => console.log('ETH:', ticker.last_price)
+  },
+  {
+    stream: EStream.TRADE,
+    params: { instrument: 'BTC_USDT_Perp', limit: 50 },
+    onData: (trades) => console.log('BTC trades:', trades.length)
+  }
+);
+
+// Unsubscribe from all
+ws.unsubscribe(...subscriptions);
+```
+
+### Multi-Instrument Price Monitor
+
+```typescript
+class MultiInstrumentMonitor {
+  private subscriptions: string[] = [];
+  private prices: Map<string, string> = new Map();
+
+  constructor(private ws: WS, private instruments: string[]) {}
+
+  start() {
+    this.subscriptions = this.ws.subscribes(
+      ...this.instruments.map(instrument => ({
+        stream: EStream.MINI_SNAP,
+        params: { instrument, rate: 1000 },
+        onData: (mini: any) => {
+          this.prices.set(instrument, mini.last_price);
+          this.displayPrices();
+        }
+      }))
+    );
+  }
+
+  stop() {
+    this.ws.unsubscribe(...this.subscriptions);
+    this.subscriptions = [];
+  }
+
+  private displayPrices() {
+    console.clear();
+    console.log('Real-time Prices:\n');
+    this.prices.forEach((price, instrument) => {
+      console.log(`${instrument.padEnd(20)} $${price}`);
+    });
+  }
+}
+
+const monitor = new MultiInstrumentMonitor(ws, [
+  'BTC_USDT_Perp',
+  'ETH_USDT_Perp',
+  'SOL_USDT_Perp',
+  'AVAX_USDT_Perp'
+]);
+
+monitor.start();
+
+// Stop after 1 minute
+setTimeout(() => monitor.stop(), 60000);
+```
+
+## Pause and Resume
+
+```typescript
+// Pause all subscriptions (useful when app is backgrounded)
+ws.pause();
+console.log('WebSocket paused');
+
+// Resume all subscriptions
+ws.resume();
+console.log('WebSocket resumed');
+```
+
+## Advanced Patterns
+
+### Order Book Aggregator
+
+```typescript
+class OrderBookAggregator {
+  private bids: Map<string, string> = new Map();
+  private asks: Map<string, string> = new Map();
+
+  constructor(private ws: WS, private instrument: string) {}
+
+  start() {
+    // Subscribe to book snapshots first
+    this.ws.subscribe({
+      stream: EStream.RPI_BOOK_SNAP,
+      params: {
+        instrument: this.instrument,
+        depth: 20,
+        rate: 1000
+      },
+      onData: (book) => {
+        // Initialize with snapshot
+        this.bids.clear();
+        this.asks.clear();
+        
+        book.bids?.forEach(bid => {
+          this.bids.set(bid.price, bid.size);
+        });
+        book.asks?.forEach(ask => {
+          this.asks.set(ask.price, ask.size);
+        });
+      }
+    });
+
+    // Then subscribe to deltas
+    this.ws.subscribe({
+      stream: EStream.RPI_BOOK_DELTA,
+      params: {
+        instrument: this.instrument,
+        rate: 100
+      },
+      onData: (delta) => {
+        // Apply incremental updates
+        delta.bids?.forEach(bid => {
+          if (parseFloat(bid.size) === 0) {
+            this.bids.delete(bid.price);
+          } else {
+            this.bids.set(bid.price, bid.size);
+          }
+        });
+        
+        delta.asks?.forEach(ask => {
+          if (parseFloat(ask.size) === 0) {
+            this.asks.delete(ask.price);
+          } else {
+            this.asks.set(ask.price, ask.size);
+          }
+        });
+      }
+    });
+  }
+
+  getBestBid(): [string, string] | undefined {
+    const prices = Array.from(this.bids.keys()).sort((a, b) => parseFloat(b) - parseFloat(a));
+    const bestPrice = prices[0];
+    return bestPrice ? [bestPrice, this.bids.get(bestPrice)!] : undefined;
+  }
+
+  getBestAsk(): [string, string] | undefined {
+    const prices = Array.from(this.asks.keys()).sort((a, b) => parseFloat(a) - parseFloat(b));
+    const bestPrice = prices[0];
+    return bestPrice ? [bestPrice, this.asks.get(bestPrice)!] : undefined;
+  }
+
+  getSpread(): number {
+    const bid = this.getBestBid();
+    const ask = this.getBestAsk();
+    if (!bid || !ask) return 0;
+    return parseFloat(ask[0]) - parseFloat(bid[0]);
+  }
+}
+
+const bookAgg = new OrderBookAggregator(ws, 'BTC_USDT_Perp');
+bookAgg.start();
+
+setInterval(() => {
+  const bid = bookAgg.getBestBid();
+  const ask = bookAgg.getBestAsk();
+  const spread = bookAgg.getSpread();
+  
+  console.log(`Best Bid: ${bid?.[0]} (${bid?.[1]})`);
+  console.log(`Best Ask: ${ask?.[0]} (${ask?.[1]})`);
+  console.log(`Spread: ${spread}`);
+}, 5000);
+```
+
+### Real-time PnL Monitor
+
+```typescript
+class PnLMonitor {
+  private currentPrice: number = 0;
+  private positions: any[] = [];
+
+  constructor(
+    private ws: WS,
+    private subAccountId: string,
+    private instrument: string
+  ) {}
+
+  start() {
+    // Subscribe to position updates
+    this.ws.subscribe({
+      stream: EStream.POSITION,
+      params: {
+        sub_account_id: this.subAccountId,
+        instrument: this.instrument
+      },
+      onData: (positions) => {
+        this.positions = positions;
+        this.calculatePnL();
+      }
+    });
+
+    // Subscribe to price updates
+    this.ws.subscribe({
+      stream: EStream.MINI_SNAP,
+      params: {
+        instrument: this.instrument,
+        rate: 500
+      },
+      onData: (mini) => {
+        this.currentPrice = parseFloat(mini.last_price);
+        this.calculatePnL();
+      }
+    });
+  }
+
+  private calculatePnL() {
+    if (!this.currentPrice || !this.positions.length) return;
+
+    this.positions.forEach(position => {
+      const size = parseFloat(position.size);
+      const entryPrice = parseFloat(position.avg_entry_price);
+      const unrealizedPnL = (this.currentPrice - entryPrice) * size;
+      const pnlPercent = ((this.currentPrice - entryPrice) / entryPrice) * 100;
+
+      console.log(`\n${position.instrument} Position:`);
+      console.log(`  Size: ${size}`);
+      console.log(`  Entry: $${entryPrice}`);
+      console.log(`  Current: $${this.currentPrice}`);
+      console.log(`  Unrealized PnL: $${unrealizedPnL.toFixed(2)} (${pnlPercent.toFixed(2)}%)`);
+    });
+  }
+}
+
+const pnlMonitor = new PnLMonitor(ws, 'YOUR_SUB_ACCOUNT_ID', 'BTC_USDT_Perp');
+pnlMonitor.start();
+```
+
+## Error Handling
+
+```typescript
+const subscription = ws.subscribe({
+  stream: EStream.TICKER_SNAP,
+  params: {
+    instrument: 'BTC_USDT_Perp',
+    rate: 1000
+  },
+  onData: (ticker) => {
+    try {
+      // Process ticker data
+      const price = parseFloat(ticker.last_price);
+      console.log('Price:', price);
+    } catch (error) {
+      console.error('Error processing ticker:', error);
+    }
+  },
+  onError: (error) => {
+    console.error('Subscription error:', error.message);
+    
+    // Attempt to resubscribe
+    if (error.code === 1003) {
+      console.log('Malformed request, not resubscribing');
+    } else {
+      console.log('Resubscribing...');
+      // Resubscription handled automatically by reconnect strategy
+    }
+  }
+});
+```
+
+## Best Practices
+
+<Note>
+1. **Use batch subscriptions** when subscribing to multiple streams
+2. **Implement exponential backoff** in reconnect strategy
+3. **Handle snapshots before deltas** for order book data
+4. **Clean up subscriptions** when no longer needed
+5. **Monitor connection health** with heartbeat tracking
+</Note>
+
+### Resource Cleanup
+
+```typescript
+class WebSocketManager {
+  private ws: WS;
+  private subscriptions: string[] = [];
+
+  constructor(url: string) {
+    this.ws = new WS({
+      url,
+      reconnectStrategy: (retries) => Math.min(1000 * Math.pow(2, retries), 30000)
+    });
+  }
+
+  subscribe(config: any) {
+    const sub = this.ws.subscribe(config);
+    this.subscriptions.push(sub);
+    return sub;
+  }
+
+  cleanup() {
+    // Unsubscribe from all
+    this.ws.unsubscribe(...this.subscriptions);
+    this.subscriptions = [];
+    
+    // Disconnect
+    this.ws.disconnect();
+  }
+}
+
+const manager = new WebSocketManager('wss://ws.grvt.io');
+
+// Use the manager...
+
+// Clean up when done
+process.on('SIGINT', () => {
+  console.log('Cleaning up...');
+  manager.cleanup();
+  process.exit();
+});
+```

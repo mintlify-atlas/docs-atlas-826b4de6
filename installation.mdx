@@ -1,0 +1,381 @@
+---
+title: Installation
+description: Install and configure the GRVT JavaScript Client SDK
+---
+
+## Requirements
+
+<Note>
+  **Node.js >= 22.18.0** is required when running in server environments.
+</Note>
+
+The SDK is compatible with:
+
+- Node.js 22.18.0 or higher
+- Modern browsers with ES6+ support
+- TypeScript 5.2.2 or higher (optional, but recommended)
+
+## Package Installation
+
+Install the `@grvt/client` package using your preferred package manager:
+
+<CodeGroup>
+
+```bash npm
+npm install @grvt/client
+```
+
+```bash yarn
+yarn add @grvt/client
+```
+
+```bash pnpm
+pnpm add @grvt/client
+```
+
+</CodeGroup>
+
+## Dependencies
+
+The SDK has minimal dependencies:
+
+- **axios** (^1.13.5): HTTP client for REST API requests
+
+All dependencies are automatically installed when you install the package.
+
+## Importing the SDK
+
+The SDK supports both ES6 imports and CommonJS require syntax:
+
+### ES6 Import (Recommended)
+
+<CodeGroup>
+
+```typescript TypeScript
+import GRVT from '@grvt/client'
+import { MDG, TDG } from '@grvt/client'
+import { WS } from '@grvt/client/ws'
+
+// Use default export
+const mdg = new GRVT.MDG({
+  host: 'https://market-data.dev.gravitymarkets.io',
+  version: 'v1'
+})
+
+// Or use named exports
+const tdg = new TDG({
+  host: 'https://trading.dev.gravitymarkets.io',
+  version: 'v1'
+})
+```
+
+```javascript JavaScript
+import GRVT from '@grvt/client'
+import { WS } from '@grvt/client/ws'
+
+const mdg = new GRVT.MDG({
+  host: 'https://market-data.dev.gravitymarkets.io',
+  version: 'v1'
+})
+```
+
+</CodeGroup>
+
+### CommonJS Require
+
+```javascript
+const GRVT = require('@grvt/client')
+
+const mdg = new GRVT.MDG({
+  host: 'https://market-data.dev.gravitymarkets.io',
+  version: 'v1'
+})
+
+const tdg = new GRVT.TDG({
+  host: 'https://trading.dev.gravitymarkets.io',
+  version: 'v1'
+})
+```
+
+### WebSocket Import
+
+<Warning>
+  WebSocket functionality requires a browser environment or a WebSocket polyfill for Node.js.
+</Warning>
+
+```typescript
+import { WS, EStream } from '@grvt/client/ws'
+
+const ws = new WS({
+  url: 'wss://market-data.dev.gravitymarkets.io/ws',
+  reconnectStrategy: (retries) => Math.min(1000 * Math.pow(2, retries), 30000)
+})
+```
+
+## TypeScript Configuration
+
+If you're using TypeScript, the SDK includes full type definitions. No additional `@types` packages are needed.
+
+### tsconfig.json
+
+Ensure your TypeScript configuration is compatible:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "lib": ["ES2020", "DOM"],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true
+  }
+}
+```
+
+## Environment Setup
+
+### Development Environment
+
+For development and testing, use the GRVT development endpoints:
+
+```typescript
+import { MDG, TDG } from '@grvt/client'
+import { WS } from '@grvt/client/ws'
+
+// Market Data Gateway (Public)
+const mdg = new MDG({
+  host: 'https://market-data.dev.gravitymarkets.io',
+  version: 'v1'
+})
+
+// Trading Data Gateway (Authenticated)
+const tdg = new TDG({
+  host: 'https://trading.dev.gravitymarkets.io',
+  version: 'v1'
+})
+
+// WebSocket (Real-time)
+const ws = new WS({
+  url: 'wss://market-data.dev.gravitymarkets.io/ws'
+})
+```
+
+### Production Environment
+
+For production applications, use the production endpoints:
+
+```typescript
+import { MDG, TDG } from '@grvt/client'
+import { WS } from '@grvt/client/ws'
+
+// Market Data Gateway
+const mdg = new MDG({
+  host: 'https://market-data.grvt.io',
+  version: 'v1'
+})
+
+// Trading Data Gateway
+const tdg = new TDG({
+  host: 'https://trading.grvt.io',
+  version: 'v1'
+})
+
+// WebSocket
+const ws = new WS({
+  url: 'wss://market-data.grvt.io/ws'
+})
+```
+
+## Configuration Options
+
+### MDG and TDG Configuration
+
+Both `MDG` and `TDG` classes accept an `IConfig` object:
+
+```typescript
+interface IConfig {
+  host: string          // API host URL (required)
+  version?: `v${number}` // API version (default: 'v1')
+}
+```
+
+**Example:**
+
+```typescript
+const mdg = new MDG({
+  host: 'https://market-data.dev.gravitymarkets.io',
+  version: 'v1' // Optional, defaults to 'v1'
+})
+```
+
+### WebSocket Configuration
+
+The `WS` class accepts an options object:
+
+```typescript
+interface IOptions {
+  url: string | URL              // WebSocket URL (required)
+  protocols?: string | string[]  // WebSocket protocols (optional)
+  timeout?: number               // Subscription timeout in ms (default: 30000)
+  reconnectStrategy?: (retries: number) => number | Error  // Reconnection strategy (optional)
+}
+```
+
+**Example with all options:**
+
+```typescript
+const ws = new WS({
+  url: 'wss://market-data.dev.gravitymarkets.io/ws',
+  timeout: 30000,
+  reconnectStrategy: (retries) => {
+    // Exponential backoff with max 30 seconds
+    return Math.min(1000 * Math.pow(2, retries), 30000)
+  }
+})
+```
+
+## Accessing Axios Instance
+
+Both `MDG` and `TDG` expose their underlying Axios instance for advanced configuration:
+
+```typescript
+import { TDG } from '@grvt/client'
+
+const tdg = new TDG({
+  host: 'https://trading.dev.gravitymarkets.io',
+  version: 'v1'
+})
+
+// Configure authentication
+tdg.axios.defaults.headers.common['Authorization'] = 'Bearer YOUR_API_KEY'
+
+// Add request interceptor
+tdg.axios.interceptors.request.use(
+  (config) => {
+    console.log('Request:', config.url)
+    return config
+  },
+  (error) => Promise.reject(error)
+)
+
+// Add response interceptor
+tdg.axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error:', error.message)
+    return Promise.reject(error)
+  }
+)
+```
+
+## Verifying Installation
+
+Test your installation with a simple script:
+
+<Steps>
+
+<Step title="Create a test file">
+Create a file named `test-grvt.js` (or `.ts` for TypeScript):
+
+```typescript test-grvt.ts
+import { MDG } from '@grvt/client'
+
+const mdg = new MDG({
+  host: 'https://market-data.dev.gravitymarkets.io',
+  version: 'v1'
+})
+
+mdg.instruments({ kind: ['PERPETUAL'] })
+  .then((response) => {
+    console.log('✓ SDK installed successfully!')
+    console.log('Instruments:', response.result?.length)
+  })
+  .catch((error) => {
+    console.error('✗ Installation test failed:', error.message)
+  })
+```
+</Step>
+
+<Step title="Run the test">
+
+<CodeGroup>
+
+```bash TypeScript
+npx tsx test-grvt.ts
+```
+
+```bash JavaScript (Node.js)
+node test-grvt.js
+```
+
+</CodeGroup>
+
+</Step>
+
+<Step title="Check output">
+You should see:
+
+```
+✓ SDK installed successfully!
+Instruments: 42
+```
+
+If you see this output, the SDK is correctly installed and configured.
+</Step>
+
+</Steps>
+
+## Troubleshooting
+
+### Node.js Version Error
+
+**Error:** `The engine "node" is incompatible with this module.`
+
+**Solution:** Upgrade to Node.js 22.18.0 or higher:
+
+```bash
+# Using nvm
+nvm install 22
+nvm use 22
+
+# Verify version
+node --version
+```
+
+### Module Not Found
+
+**Error:** `Cannot find module '@grvt/client'`
+
+**Solution:** Ensure the package is installed:
+
+```bash
+npm install @grvt/client
+```
+
+### TypeScript Errors
+
+**Error:** Type definition errors
+
+**Solution:** The SDK includes built-in TypeScript definitions. Ensure your `tsconfig.json` has `moduleResolution: "node"` and `esModuleInterop: true`.
+
+### WebSocket Not Available
+
+**Error:** `WebSocket is not defined`
+
+**Solution:** WebSocket is only available in browsers. For Node.js, you'll need a WebSocket polyfill:
+
+```bash
+npm install ws
+```
+
+```javascript
+global.WebSocket = require('ws')
+```
+
+## Next Steps
+
+<Card title="Quickstart Guide" icon="rocket" href="/quickstart">
+  Learn how to make your first API calls and establish WebSocket connections
+</Card>

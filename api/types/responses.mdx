@@ -1,0 +1,421 @@
+---
+title: Response Types
+description: Common response interfaces for API operations
+---
+
+Response types returned by the GRVT SDK for various API operations.
+
+## WebSocket Feed Data Types
+
+### IWSCandlestickFeedDataV1
+
+Candlestick feed data structure.
+
+```typescript
+interface IWSCandlestickFeedDataV1 {
+  stream?: string
+  selector?: string
+  sequence_number?: string
+  feed?: ICandlestick
+  prev_sequence_number?: string
+}
+```
+
+<ResponseField name="stream" type="string">
+  Stream name (e.g., `candle`)
+</ResponseField>
+
+<ResponseField name="selector" type="string">
+  Primary selector identifying the subscription
+</ResponseField>
+
+<ResponseField name="sequence_number" type="string">
+  Sequence number for message ordering. If `useGlobalSequenceNumber` is true, returns global sequence number; otherwise returns gateway sequence number.
+</ResponseField>
+
+<ResponseField name="feed" type="ICandlestick">
+  Candlestick data matching the request filters
+</ResponseField>
+
+<ResponseField name="prev_sequence_number" type="string">
+  Previous sequence number for ordering
+</ResponseField>
+
+### IWSOrderbookLevelsFeedDataV1
+
+Orderbook levels feed data structure.
+
+```typescript
+interface IWSOrderbookLevelsFeedDataV1 {
+  stream?: string
+  selector?: string
+  sequence_number?: string
+  feed?: IOrderbookLevels
+  prev_sequence_number?: string
+}
+```
+
+<ResponseField name="stream" type="string">
+  Stream name (e.g., `rpi.book.d`, `rpi.book.s`)
+</ResponseField>
+
+<ResponseField name="selector" type="string">
+  Primary selector
+</ResponseField>
+
+<ResponseField name="sequence_number" type="string">
+  Message sequence number
+</ResponseField>
+
+<ResponseField name="feed" type="IOrderbookLevels">
+  Orderbook levels data
+</ResponseField>
+
+<ResponseField name="prev_sequence_number" type="string">
+  Previous sequence number
+</ResponseField>
+
+### IWSTickerFeedDataV1
+
+Ticker feed data structure.
+
+```typescript
+interface IWSTickerFeedDataV1 {
+  stream?: string
+  selector?: string
+  sequence_number?: string
+  feed?: ITicker
+  prev_sequence_number?: string
+}
+```
+
+<ResponseField name="feed" type="ITicker">
+  Full ticker data including 24h statistics
+</ResponseField>
+
+### IWSMiniTickerFeedDataV1
+
+Mini ticker feed data structure.
+
+```typescript
+interface IWSMiniTickerFeedDataV1 {
+  stream?: string
+  selector?: string
+  sequence_number?: string
+  feed?: IMiniTicker
+  prev_sequence_number?: string
+}
+```
+
+<ResponseField name="feed" type="IMiniTicker">
+  Lightweight ticker data
+</ResponseField>
+
+### IWSTradeFeedDataV1
+
+Public trade feed data structure.
+
+```typescript
+interface IWSTradeFeedDataV1 {
+  stream?: string
+  selector?: string
+  sequence_number?: string
+  feed?: ITrade[]
+  prev_sequence_number?: string
+}
+```
+
+<ResponseField name="feed" type="ITrade[]">
+  Array of public trades
+</ResponseField>
+
+## Trading Data Feed Types
+
+### IWSOrderFeedDataV1
+
+Order feed data structure.
+
+```typescript
+interface IWSOrderFeedDataV1 {
+  stream?: string
+  selector?: string
+  sequence_number?: string
+  feed?: IOrder
+  prev_sequence_number?: string
+}
+```
+
+<ResponseField name="feed" type="IOrder">
+  Order object being created or updated
+</ResponseField>
+
+### IWSOrderStateFeedDataV1
+
+Order state feed data structure (lightweight).
+
+```typescript
+interface IWSOrderStateFeedDataV1 {
+  stream?: string
+  selector?: string
+  sequence_number?: string
+  feed?: IOrderStateFeed
+  prev_sequence_number?: string
+}
+```
+
+<ResponseField name="feed" type="IOrderStateFeed">
+  Lightweight order state information
+</ResponseField>
+
+### IWSOrderGroupFeedDataV1
+
+Order group feed data structure.
+
+```typescript
+interface IWSOrderGroupFeedDataV1 {
+  stream?: string
+  selector?: string
+  sequence_number?: string
+  feed?: IClientOrderIDsByGroup
+  prev_sequence_number?: string
+}
+```
+
+<ResponseField name="feed" type="IClientOrderIDsByGroup">
+  Order group information
+</ResponseField>
+
+### IWSPositionsFeedDataV1
+
+Position feed data structure.
+
+```typescript
+interface IWSPositionsFeedDataV1 {
+  stream?: string
+  selector?: string
+  sequence_number?: string
+  feed?: IPosition
+  prev_sequence_number?: string
+}
+```
+
+<ResponseField name="feed" type="IPosition">
+  Position data
+</ResponseField>
+
+### IWSFillFeedDataV1
+
+Fill (execution) feed data structure.
+
+```typescript
+interface IWSFillFeedDataV1 {
+  stream?: string
+  selector?: string
+  sequence_number?: string
+  feed?: IFill
+  prev_sequence_number?: string
+}
+```
+
+<ResponseField name="feed" type="IFill">
+  Private trade execution data
+</ResponseField>
+
+### IWSDepositFeedDataV1
+
+Deposit feed data structure.
+
+```typescript
+interface IWSDepositFeedDataV1 {
+  stream?: string
+  selector?: string
+  sequence_number?: string
+  feed?: IDeposit
+  prev_sequence_number?: string
+}
+```
+
+<ResponseField name="feed" type="IDeposit">
+  Deposit information
+</ResponseField>
+
+### IWSTransferFeedDataV1
+
+Transfer feed data structure.
+
+```typescript
+interface IWSTransferFeedDataV1 {
+  stream?: string
+  selector?: string
+  sequence_number?: string
+  feed?: ITransferHistory
+  prev_sequence_number?: string
+}
+```
+
+<ResponseField name="feed" type="ITransferHistory">
+  Internal transfer information
+</ResponseField>
+
+### IWSWithdrawalFeedDataV1
+
+Withdrawal feed data structure.
+
+```typescript
+interface IWSWithdrawalFeedDataV1 {
+  stream?: string
+  selector?: string
+  sequence_number?: string
+  feed?: IWithdrawal
+  prev_sequence_number?: string
+}
+```
+
+<ResponseField name="feed" type="IWithdrawal">
+  Withdrawal information
+</ResponseField>
+
+## Common Response Patterns
+
+### Sequence Numbers
+
+All feed data includes sequence numbers for message ordering:
+
+- **Gateway Sequence Number**: Increments locally within each stream, resets on gateway restart
+- **Global Sequence Number**: Unique across the cluster, computed as `cluster_sequence_number * 10^5 + dedupCounter`
+
+The type of sequence number depends on the `useGlobalSequenceNumber` configuration.
+
+### Delta vs Snapshot Feeds
+
+**Delta Feed Semantics:**
+
+```typescript
+// On subscription: full snapshot sent first
+{
+  stream: 'ticker.d',
+  feed: {
+    instrument: 'BTC_USDT_Perp',
+    last_price: '50000',
+    volume_24h: '1000000',
+    // ... all fields
+  }
+}
+
+// Subsequent updates: only changed fields
+{
+  stream: 'ticker.d',
+  feed: {
+    last_price: '50100',  // updated
+    // other fields omitted = unchanged
+  }
+}
+
+// Field set to zero
+{
+  stream: 'ticker.d',
+  feed: {
+    last_price: '0'  // explicitly zero
+  }
+}
+
+// Field set to null
+{
+  stream: 'ticker.d',
+  feed: {
+    last_price: ''  // null/empty
+  }
+}
+```
+
+**Snapshot Feed Semantics:**
+
+```typescript
+// Every update: complete snapshot
+{
+  stream: 'ticker.s',
+  feed: {
+    instrument: 'BTC_USDT_Perp',
+    last_price: '50100',
+    volume_24h: '1000001',
+    // ... all fields always included
+  }
+}
+```
+
+### Orderbook Delta Semantics
+
+For orderbook delta feeds (`rpi.book.d`):
+
+```typescript
+// Initial snapshot: all levels
+{
+  feed: {
+    bids: [
+      { price: '50000', size: '1.5' },
+      { price: '49999', size: '2.0' }
+    ],
+    asks: [
+      { price: '50001', size: '1.0' },
+      { price: '50002', size: '0.5' }
+    ]
+  }
+}
+
+// Delta update: only changed levels
+{
+  feed: {
+    bids: [
+      { price: '50000', size: '2.0' }  // size updated
+    ],
+    asks: [
+      { price: '50001', size: '0' }  // level removed
+    ]
+  }
+}
+```
+
+**Level semantics:**
+- Level not published = unchanged
+- `size: 'X'` = level updated to size X
+- `size: '0'` = level removed
+- New levels published when price moves
+
+## Error Responses
+
+WebSocket errors use the `WSError` class:
+
+```typescript
+class WSError extends Error {
+  code?: number
+  status?: number
+  message: string
+}
+```
+
+<ResponseField name="code" type="number">
+  Error code from server
+</ResponseField>
+
+<ResponseField name="status" type="number">
+  HTTP-style status code
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Error description
+</ResponseField>
+
+**Example error handling:**
+
+```typescript
+ws.onError((error) => {
+  if (error instanceof WSError) {
+    console.error(`Error ${error.code}: ${error.message}`)
+    
+    // Handle specific error codes
+    if (error.code === 1003) {
+      // Malformed request (automatically ignored by SDK)
+    }
+  }
+})
+```

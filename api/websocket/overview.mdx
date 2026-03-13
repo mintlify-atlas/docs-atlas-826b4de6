@@ -1,0 +1,115 @@
+---
+title: WebSocket Overview
+description: Real-time market data and trading updates via WebSocket connections
+---
+
+The GRVT JavaScript Client SDK provides a robust WebSocket client for subscribing to real-time market data feeds and trading updates. The WebSocket implementation supports automatic reconnection, subscription management, and efficient message handling.
+
+## Features
+
+- **Automatic Reconnection**: Built-in reconnection strategy with configurable retry logic
+- **Stream Management**: Subscribe and unsubscribe from multiple data streams
+- **Type-Safe API**: Full TypeScript support with strongly-typed message handlers
+- **Connection Lifecycle**: Hooks for connection, disconnection, and error events
+- **Pause/Resume**: Temporarily pause message delivery without closing the connection
+- **Heartbeat**: Automatic ping mechanism to maintain connection health
+
+## Available Streams
+
+The SDK supports both Market Data Gateway (MDG) and Trading Data Gateway (TDG) streams:
+
+### Market Data Streams (MDG)
+
+- **Candlestick** (`candle`) - OHLCV candlestick data at various intervals
+- **Mini Ticker** (`mini.d`, `mini.s`) - Simplified market statistics
+- **Ticker** (`ticker.d`, `ticker.s`) - Full market statistics and 24h data
+- **Orderbook** (`rpi.book.d`, `rpi.book.s`) - Aggregated orderbook levels
+- **Trade** (`trade`) - Public trade feed
+
+### Trading Data Streams (TDG)
+
+- **Order** (`order`) - Order updates for your account
+- **Order State** (`state`) - Lightweight order state changes
+- **Order Group** (`group`) - Order group creation events
+- **Position** (`position`) - Position updates
+- **Fill** (`fill`) - Private trade executions
+- **Deposit** (`deposit`) - Deposit notifications
+- **Transfer** (`transfer`) - Internal transfer updates
+- **Withdrawal** (`withdrawal`) - Withdrawal notifications
+
+## Stream Types
+
+Many streams offer two variants:
+
+- **Delta (`.d`)**: Sends initial snapshot, then only changed fields
+- **Snapshot (`.s`)**: Sends complete data on every update
+
+Delta streams are more efficient for high-frequency updates, while snapshot streams simplify integration.
+
+## Basic Usage
+
+```typescript
+import { WS } from '@grvt/sdk'
+
+const ws = new WS({
+  url: 'wss://api.grvt.io/ws',
+  reconnectStrategy: (retries) => {
+    // Exponential backoff: 1s, 2s, 4s, 8s, max 30s
+    return Math.min(1000 * Math.pow(2, retries), 30000)
+  }
+})
+
+// Connect to WebSocket
+ws.connect()
+
+// Subscribe to a stream
+const subscriptionKey = ws.subscribe({
+  stream: 'trade',
+  params: {
+    instrument: 'BTC_USDT_Perp',
+    limit: 100
+  },
+  onData: (trade) => {
+    console.log('New trade:', trade)
+  },
+  onError: (error) => {
+    console.error('Stream error:', error)
+  }
+})
+
+// Unsubscribe when done
+ws.unsubscribe(subscriptionKey)
+```
+
+## Error Handling
+
+The WebSocket client provides comprehensive error handling:
+
+```typescript
+// Handle connection errors
+ws.onError((error) => {
+  if (error instanceof WSError) {
+    console.error(`WS Error: ${error.message}`, {
+      code: error.code,
+      status: error.status
+    })
+  }
+})
+
+// Handle subscription errors
+ws.subscribe({
+  stream: 'order',
+  params: { sub_account_id: 'abc123' },
+  onData: (order) => { /* ... */ },
+  onError: (error) => {
+    // Handle subscription-specific errors
+    console.error('Order stream error:', error)
+  }
+})
+```
+
+## Next Steps
+
+- [Connection Management](/api/websocket/connection) - Learn about connection lifecycle and configuration
+- [Streams Reference](/api/websocket/streams) - Detailed documentation for each stream type
+- [Configuration Types](/api/types/configuration) - WebSocket configuration options

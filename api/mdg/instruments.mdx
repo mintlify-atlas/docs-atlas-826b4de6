@@ -1,0 +1,193 @@
+---
+title: Instrument Methods
+description: Query trading instruments and their details
+---
+
+Instrument methods provide access to information about trading instruments available on the Gravity exchange. These methods allow you to query single instruments, filter instruments by criteria, or retrieve all available instruments.
+
+## instrument
+
+Get detailed information about a single instrument by its name.
+
+```typescript
+instrument(payload: IApiGetInstrumentRequest, config?: AxiosRequestConfig): Promise<IApiGetInstrumentResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiGetInstrumentRequest" required>
+  Request payload for querying a single instrument
+  
+  <Expandable title="properties">
+    <ParamField path="instrument" type="string" required>
+      The readable instrument name. Examples:
+      - Perpetual: `ETH_USDT_Perp`
+      - Future: `BTC_USDT_Fut_20Oct23`
+      - Call: `ETH_USDT_Call_20Oct23_2800`
+      - Put: `ETH_USDT_Put_20Oct23_2800`
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiGetInstrumentResponse">
+  Contains the detailed instrument information
+</ResponseField>
+
+### Example
+
+```typescript
+const response = await mdg.instrument({
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log(response);
+```
+
+### API Reference
+
+See the [official API documentation](https://api-docs.grvt.io/market_data_api/#get-instrument) for more details.
+
+---
+
+## instruments
+
+Get a filtered list of instruments based on specified criteria.
+
+```typescript
+instruments(payload: IApiGetFilteredInstrumentsRequest, config?: AxiosRequestConfig): Promise<IApiGetFilteredInstrumentsResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiGetFilteredInstrumentsRequest" required>
+  Request payload for querying filtered instruments
+  
+  <Expandable title="properties">
+    <ParamField path="kind" type="EKind[]">
+      Filter by instrument kind (e.g., PERPETUAL, FUTURE, CALL, PUT)
+    </ParamField>
+    
+    <ParamField path="base" type="string[]">
+      Filter by base currency (e.g., BTC, ETH)
+    </ParamField>
+    
+    <ParamField path="quote" type="string[]">
+      Filter by quote currency (e.g., USDT, USD)
+    </ParamField>
+    
+    <ParamField path="settlement_period" type="EInstrumentSettlementPeriod[]">
+      Filter by settlement period
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiGetFilteredInstrumentsResponse">
+  Contains the list of instruments matching the filter criteria
+  
+  <Expandable title="properties">
+    <ResponseField name="result" type="Instrument[]">
+      Array of instruments matching the filters
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```typescript
+// Get all BTC perpetual instruments
+const response = await mdg.instruments({
+  kind: ['PERPETUAL'],
+  base: ['BTC']
+});
+
+console.log(response.result);
+```
+
+### API Reference
+
+See the [official API documentation](https://api-docs.grvt.io/market_data_api/#get-instruments) for more details.
+
+---
+
+## allInstruments
+
+Get all available instruments on the exchange.
+
+```typescript
+allInstruments(payload: IApiGetAllInstrumentsRequest, config?: AxiosRequestConfig): Promise<IApiGetAllInstrumentsResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiGetAllInstrumentsRequest" required>
+  Request payload for querying all instruments. This may be an empty object or contain optional filters.
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiGetAllInstrumentsResponse">
+  Contains all available instruments
+  
+  <Expandable title="properties">
+    <ResponseField name="result" type="Instrument[]">
+      Array of all instruments available on the exchange
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```typescript
+const response = await mdg.allInstruments({});
+
+console.log(`Total instruments: ${response.result.length}`);
+```
+
+### API Reference
+
+See the [official API documentation](https://api-docs.grvt.io/market_data_api/#get-all-instruments) for more details.
+
+---
+
+## Common Use Cases
+
+### Find all perpetual instruments
+
+```typescript
+const perpetuals = await mdg.instruments({
+  kind: ['PERPETUAL']
+});
+```
+
+### Get specific instrument details
+
+```typescript
+const btcPerp = await mdg.instrument({
+  instrument: 'BTC_USDT_Perp'
+});
+```
+
+### List all ETH-denominated options
+
+```typescript
+const ethOptions = await mdg.instruments({
+  kind: ['CALL', 'PUT'],
+  base: ['ETH']
+});
+```

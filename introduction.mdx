@@ -1,0 +1,179 @@
+---
+title: Introduction
+description: Node.js & JavaScript client for GRVT REST APIs & WebSockets
+---
+
+## What is GRVT?
+
+GRVT (Gravity Markets) is a high-performance derivatives trading platform. The GRVT JavaScript Client SDK provides a comprehensive interface for interacting with GRVT's trading infrastructure, including market data, trading operations, and real-time WebSocket feeds.
+
+## SDK Overview
+
+The `@grvt/client` package is the official JavaScript/TypeScript SDK for GRVT, designed to work seamlessly in both Node.js and browser environments. It provides a clean, promise-based API for accessing all GRVT platform features.
+
+### Key Components
+
+The SDK is organized into three main modules:
+
+<CardGroup cols={3}>
+  <Card title="MDG" icon="chart-line">
+    **Market Data Gateway**
+    
+    Access real-time and historical market data including instruments, tickers, order books, trades, candlesticks, and funding rates.
+  </Card>
+  
+  <Card title="TDG" icon="arrow-right-arrow-left">
+    **Trading Data Gateway**
+    
+    Execute trades, manage orders, handle positions, process transfers, and access account information.
+  </Card>
+  
+  <Card title="WS" icon="satellite-dish">
+    **WebSocket Streams**
+    
+    Subscribe to real-time data feeds for market updates, order changes, position updates, and account events.
+  </Card>
+</CardGroup>
+
+## Key Features
+
+### Market Data (MDG)
+
+- **Instrument Data**: Query trading instruments with filtering and search capabilities
+- **Market Tickers**: Real-time and mini ticker data for price discovery
+- **Order Books**: Full depth order book data with configurable levels
+- **Trade History**: Historical trade data with pagination
+- **Candlesticks**: OHLCV data across multiple timeframes
+- **Funding Rates**: Perpetual funding rate data and history
+- **Settlement Prices**: Historical settlement price information
+- **Vault Data**: Vault performance, positions, and risk metrics
+
+### Trading Operations (TDG)
+
+- **Order Management**: Create, cancel, modify, and query orders
+- **Position Management**: View positions, manage margin, and configure leverage
+- **Account Operations**: Account summaries, balances, and performance metrics
+- **Transfers**: Deposits, withdrawals, and internal transfers
+- **Fill History**: Complete execution history with filtering
+- **Risk Management**: Pre-order checks, margin requirements, and position limits
+- **Vault Operations**: Invest, redeem, and manage vault allocations
+
+### WebSocket Streaming (WS)
+
+- **Market Data Streams**: Real-time order books, trades, tickers, and candlesticks
+- **Private Streams**: Order updates, position changes, fills, and account events
+- **Automatic Reconnection**: Built-in reconnection strategy with exponential backoff
+- **Subscription Management**: Dynamic subscribe/unsubscribe with multiple feeds
+- **Error Handling**: Comprehensive error handling and event callbacks
+
+## Architecture
+
+### Type Safety
+
+The SDK is built with TypeScript and provides full type definitions for all API requests and responses. This ensures compile-time type checking and excellent IDE support with autocomplete and inline documentation.
+
+### Schema Mapping
+
+GRVT uses an optimized wire format for efficient data transmission. The SDK automatically handles conversion between:
+- **Full Format**: Developer-friendly field names (e.g., `instrument`, `order_id`)
+- **Lite Format**: Compact wire format for network efficiency (e.g., `i`, `o`)
+
+You work with the full format while the SDK handles serialization/deserialization transparently.
+
+### Error Handling
+
+All API methods return promises and include built-in error handling:
+
+```typescript
+try {
+  const response = await mdg.ticker({ instrument: 'BTC-PERP' })
+  console.log(response)
+} catch (error) {
+  console.error('API Error:', error.message)
+  console.error('Status:', error.status)
+  console.error('Code:', error.code)
+}
+```
+
+## Browser and Node.js Support
+
+<Note>
+  The SDK requires **Node.js >= 22.18.0** when running in server environments.
+</Note>
+
+### REST APIs (MDG/TDG)
+
+The REST API clients work in both Node.js and modern browsers:
+
+- **Node.js**: Full support for all features
+- **Browsers**: Full support with CORS-enabled endpoints
+
+### WebSocket Streams
+
+<Warning>
+  WebSocket support is **only available in browsers** and platforms that natively support the WebSocket API. Node.js environments require additional WebSocket polyfills.
+</Warning>
+
+See [Browser Compatibility](https://caniuse.com/websockets) for WebSocket support details.
+
+## Environment Configuration
+
+The SDK supports multiple GRVT environments:
+
+### Development Environment
+
+```typescript
+import GRVT from '@grvt/client'
+
+const mdg = new GRVT.MDG({
+  host: 'https://market-data.dev.gravitymarkets.io',
+  version: 'v1'
+})
+
+const tdg = new GRVT.TDG({
+  host: 'https://trading.dev.gravitymarkets.io',
+  version: 'v1'
+})
+```
+
+### Production Environment
+
+```typescript
+const mdg = new GRVT.MDG({
+  host: 'https://market-data.grvt.io',
+  version: 'v1'
+})
+
+const tdg = new GRVT.TDG({
+  host: 'https://trading.grvt.io',
+  version: 'v1'
+})
+```
+
+## Authentication
+
+The Trading Data Gateway (TDG) requires authentication for protected endpoints. You can configure authentication by accessing the underlying Axios instance:
+
+```typescript
+import { TDG } from '@grvt/client'
+
+const tdg = new TDG({
+  host: 'https://trading.dev.gravitymarkets.io',
+  version: 'v1'
+})
+
+// Configure authentication headers
+tdg.axios.defaults.headers.common['Authorization'] = 'Bearer YOUR_API_KEY'
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Install the SDK and set up your development environment
+  </Card>
+  
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get started with your first API calls and WebSocket connections
+  </Card>
+</CardGroup>

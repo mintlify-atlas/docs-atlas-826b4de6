@@ -1,0 +1,110 @@
+---
+title: "Position Methods"
+description: "Manage positions and margin configuration"
+---
+
+## positions
+
+Get current positions for a sub-account.
+
+```typescript
+positions(payload: IApiPositionsRequest, config?: AxiosRequestConfig): Promise<IApiPositionsResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiPositionsRequest" required>
+  The positions query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiPositionsResponse">
+  Current positions data
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#positions)
+
+---
+
+## setPositionConfig
+
+Set position margin configuration for a sub-account.
+
+```typescript
+setPositionConfig(payload: IApiSetSubAccountPositionMarginConfigRequest, config?: AxiosRequestConfig): Promise<IApiSetSubAccountPositionMarginConfigResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiSetSubAccountPositionMarginConfigRequest" required>
+  The position configuration request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiSetSubAccountPositionMarginConfigResponse">
+  The updated configuration
+</ResponseField>
+
+---
+
+## addPositionMargin
+
+Add margin to an isolated position.
+
+```typescript
+addPositionMargin(payload: IApiAddIsolatedPositionMarginRequest, config?: AxiosRequestConfig): Promise<IApiAddIsolatedPositionMarginResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiAddIsolatedPositionMarginRequest" required>
+  The add margin request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiAddIsolatedPositionMarginResponse">
+  The updated position margin
+</ResponseField>
+
+---
+
+## getPositionMarginLimits
+
+Get margin limits for isolated positions.
+
+```typescript
+getPositionMarginLimits(payload: IApiGetIsolatedPositionMarginLimitsRequest, config?: AxiosRequestConfig): Promise<IApiGetIsolatedPositionMarginLimitsResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiGetIsolatedPositionMarginLimitsRequest" required>
+  The margin limits query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiGetIsolatedPositionMarginLimitsResponse">
+  Position margin limits
+</ResponseField>

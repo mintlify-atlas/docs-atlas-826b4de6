@@ -1,0 +1,453 @@
+---
+title: Market Data Examples
+description: Comprehensive examples for accessing market data using the GRVT MDG client
+---
+
+## Overview
+
+The Market Data Gateway (MDG) provides access to public market data including instruments, tickers, order books, trades, candlesticks, and funding rates. All MDG endpoints are public and don't require authentication.
+
+```typescript
+import { MDG } from '@grvt/client';
+
+const mdg = new MDG({
+  host: 'https://api.grvt.io',
+  version: 'v1'
+});
+```
+
+## Instruments
+
+### Get Single Instrument
+
+Retrieve detailed information about a specific trading instrument:
+
+```typescript
+const instrument = await mdg.instrument({
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log('Symbol:', instrument.result.instrument);
+console.log('Base currency:', instrument.result.base);
+console.log('Quote currency:', instrument.result.quote);
+console.log('Tick size:', instrument.result.tick_size);
+console.log('Min order size:', instrument.result.min_size);
+console.log('Is active:', instrument.result.is_active);
+```
+
+### Get Filtered Instruments
+
+Query multiple instruments with filters:
+
+```typescript
+// Get all active BTC instruments
+const btcInstruments = await mdg.instruments({
+  base: 'BTC',
+  is_active: true
+});
+
+for (const inst of btcInstruments.result) {
+  console.log(`${inst.instrument}: ${inst.instrument_type}`);
+}
+
+// Get all perpetual contracts
+const perps = await mdg.instruments({
+  kind: 'PERPETUAL',
+  is_active: true
+});
+
+console.log(`Found ${perps.result.length} active perpetuals`);
+```
+
+### Get All Instruments
+
+Retrieve the complete list of instruments:
+
+```typescript
+const allInstruments = await mdg.allInstruments({});
+
+console.log('Total instruments:', allInstruments.result.length);
+
+// Filter by type
+const futures = allInstruments.result.filter(
+  inst => inst.instrument_type === 'FUTURE'
+);
+const options = allInstruments.result.filter(
+  inst => inst.instrument_type === 'OPTION'
+);
+
+console.log('Futures:', futures.length);
+console.log('Options:', options.length);
+```
+
+## Tickers
+
+### Full Ticker Data
+
+Get comprehensive ticker information including 24h statistics:
+
+```typescript
+const ticker = await mdg.ticker({
+  instrument: 'ETH_USDT_Perp'
+});
+
+const t = ticker.result;
+console.log('Last price:', t.last_price);
+console.log('24h high:', t.high_24h);
+console.log('24h low:', t.low_24h);
+console.log('24h volume:', t.volume_24h);
+console.log('24h change:', t.price_change_24h);
+console.log('Best bid:', t.best_bid_price);
+console.log('Best ask:', t.best_ask_price);
+console.log('Funding rate:', t.funding_rate);
+console.log('Open interest:', t.open_interest);
+```
+
+### Mini Ticker
+
+Get lightweight ticker data for efficient polling:
+
+```typescript
+const miniTicker = await mdg.miniTicker({
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log('Last price:', miniTicker.result.last_price);
+console.log('Best bid:', miniTicker.result.best_bid_price);
+console.log('Best ask:', miniTicker.result.best_ask_price);
+console.log('24h volume:', miniTicker.result.volume_24h);
+```
+
+### Monitor Price Changes
+
+```typescript
+async function monitorPriceChange(instrument: string, intervalMs: number = 5000) {
+  let previousPrice: number | null = null;
+
+  setInterval(async () => {
+    try {
+      const ticker = await mdg.miniTicker({ instrument });
+      const currentPrice = parseFloat(ticker.result.last_price);
+
+      if (previousPrice !== null) {
+        const change = ((currentPrice - previousPrice) / previousPrice) * 100;
+        console.log(`${instrument}: $${currentPrice} (${change.toFixed(2)}%)`);
+      } else {
+        console.log(`${instrument}: $${currentPrice}`);
+      }
+
+      previousPrice = currentPrice;
+    } catch (error) {
+      console.error('Error fetching ticker:', error.message);
+    }
+  }, intervalMs);
+}
+
+monitorPriceChange('BTC_USDT_Perp', 5000);
+```
+
+## Order Book
+
+### Get Order Book Snapshot
+
+```typescript
+// Get top 10 levels
+const book = await mdg.orderBook({
+  instrument: 'BTC_USDT_Perp',
+  depth: 10
+});
+
+console.log('Bids:');
+book.result.bids.forEach((bid, i) => {
+  console.log(`  ${i + 1}. Price: ${bid.price}, Size: ${bid.size}`);
+});
+
+console.log('Asks:');
+book.result.asks.forEach((ask, i) => {
+  console.log(`  ${i + 1}. Price: ${ask.price}, Size: ${ask.size}`);
+});
+```
+
+### Calculate Order Book Imbalance
+
+```typescript
+async function calculateBookImbalance(instrument: string) {
+  const book = await mdg.orderBook({
+    instrument,
+    depth: 5
+  });
+
+  const bidVolume = book.result.bids.reduce(
+    (sum, bid) => sum + parseFloat(bid.size), 0
+  );
+  const askVolume = book.result.asks.reduce(
+    (sum, ask) => sum + parseFloat(ask.size), 0
+  );
+
+  const imbalance = (bidVolume - askVolume) / (bidVolume + askVolume);
+
+  return {
+    bidVolume,
+    askVolume,
+    imbalance,
+    signal: imbalance > 0.2 ? 'BUY' : imbalance < -0.2 ? 'SELL' : 'NEUTRAL'
+  };
+}
+
+const signal = await calculateBookImbalance('ETH_USDT_Perp');
+console.log('Book imbalance:', signal);
+```
+
+## Trade History
+
+### Recent Trades
+
+Get the most recent public trades:
+
+```typescript
+const trades = await mdg.trade({
+  instrument: 'BTC_USDT_Perp',
+  limit: 50
+});
+
+console.log(`Last ${trades.result.length} trades:`);
+trades.result.forEach(trade => {
+  console.log(
+    `${trade.side} ${trade.size} @ ${trade.price} at ${new Date(trade.created_at)}`
+  );
+});
+```
+
+### Historical Trades with Pagination
+
+```typescript
+async function fetchHistoricalTrades(
+  instrument: string,
+  fromTimestamp: string,
+  toTimestamp: string
+) {
+  const allTrades = [];
+  let cursor = undefined;
+
+  while (true) {
+    const response = await mdg.tradesHistory({
+      instrument,
+      from: fromTimestamp,
+      to: toTimestamp,
+      limit: 1000,
+      cursor
+    });
+
+    allTrades.push(...response.result);
+
+    if (!response.next || response.result.length < 1000) {
+      break;
+    }
+
+    cursor = response.next;
+  }
+
+  return allTrades;
+}
+
+// Fetch last 24 hours of trades
+const now = Date.now();
+const yesterday = now - 24 * 60 * 60 * 1000;
+
+const trades24h = await fetchHistoricalTrades(
+  'BTC_USDT_Perp',
+  yesterday.toString(),
+  now.toString()
+);
+
+console.log(`Total trades in 24h: ${trades24h.length}`);
+```
+
+## Candlestick Data
+
+### Get OHLCV Data
+
+```typescript
+// Get 1-hour candles for the last 24 hours
+const candles = await mdg.candlestick({
+  instrument: 'BTC_USDT_Perp',
+  interval: '1H',
+  limit: 24
+});
+
+candles.result.forEach(candle => {
+  console.log(`Time: ${new Date(candle.timestamp)}`);
+  console.log(`  Open: ${candle.open}`);
+  console.log(`  High: ${candle.high}`);
+  console.log(`  Low: ${candle.low}`);
+  console.log(`  Close: ${candle.close}`);
+  console.log(`  Volume: ${candle.volume}`);
+});
+```
+
+### Calculate Technical Indicators
+
+```typescript
+async function calculateSMA(instrument: string, period: number) {
+  const candles = await mdg.candlestick({
+    instrument,
+    interval: '1H',
+    limit: period
+  });
+
+  const sum = candles.result.reduce(
+    (acc, candle) => acc + parseFloat(candle.close),
+    0
+  );
+
+  return sum / candles.result.length;
+}
+
+// Calculate 20-period SMA
+const sma20 = await calculateSMA('BTC_USDT_Perp', 20);
+console.log('20-period SMA:', sma20);
+
+// Calculate 50-period SMA
+const sma50 = await calculateSMA('BTC_USDT_Perp', 50);
+console.log('50-period SMA:', sma50);
+
+if (sma20 > sma50) {
+  console.log('Bullish crossover detected');
+} else {
+  console.log('Bearish crossover detected');
+}
+```
+
+## Funding Rates
+
+### Current Funding Rate
+
+```typescript
+const funding = await mdg.funding({
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log('Current funding rate:', funding.result.funding_rate);
+console.log('Predicted funding rate:', funding.result.predicted_funding_rate);
+console.log('Next funding time:', new Date(funding.result.next_funding_time));
+
+// Annualize the funding rate (assuming 8-hour funding)
+const annualizedRate = parseFloat(funding.result.funding_rate) * 365 * 3;
+console.log('Annualized funding rate:', (annualizedRate * 100).toFixed(2) + '%');
+```
+
+### Funding Rate Comparison
+
+```typescript
+// Compare funding rates across exchanges
+const comparison = await mdg.liveFundingRateComparison({
+  instruments: ['BTC_USDT_Perp', 'ETH_USDT_Perp']
+});
+
+for (const data of comparison.result) {
+  console.log(`\n${data.instrument}:`);
+  console.log(`  GRVT: ${data.grvt_funding_rate}`);
+  console.log(`  Binance: ${data.binance_funding_rate}`);
+  console.log(`  Bybit: ${data.bybit_funding_rate}`);
+  console.log(`  OKX: ${data.okx_funding_rate}`);
+}
+```
+
+### Historical Funding Rates
+
+```typescript
+const fundingHistory = await mdg.fundingHistoryComparison({
+  instrument: 'BTC_USDT_Perp',
+  from: (Date.now() - 7 * 24 * 60 * 60 * 1000).toString(), // Last 7 days
+  to: Date.now().toString()
+});
+
+// Calculate average funding rate
+const avgFunding = fundingHistory.result.reduce(
+  (sum, f) => sum + parseFloat(f.grvt_funding_rate),
+  0
+) / fundingHistory.result.length;
+
+console.log('7-day average funding rate:', avgFunding);
+```
+
+## Settlement Prices
+
+```typescript
+const settlement = await mdg.settlement({
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log('Settlement price:', settlement.result.settlement_price);
+console.log('Settlement time:', new Date(settlement.result.settlement_time));
+```
+
+## Margin Rules
+
+```typescript
+const marginRules = await mdg.marginRules({
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log('Initial margin rate:', marginRules.result.initial_margin_rate);
+console.log('Maintenance margin rate:', marginRules.result.maintenance_margin_rate);
+console.log('Maximum leverage:', 1 / parseFloat(marginRules.result.initial_margin_rate));
+```
+
+## Best Practices
+
+<Note>
+**Rate Limiting**: Be mindful of API rate limits. For frequent updates, consider using WebSocket connections instead of polling REST endpoints.
+</Note>
+
+### Efficient Polling
+
+```typescript
+class MarketDataPoller {
+  private intervals: Map<string, NodeJS.Timer> = new Map();
+
+  constructor(private mdg: MDG) {}
+
+  pollTicker(instrument: string, callback: (ticker: any) => void, intervalMs: number = 1000) {
+    const key = `ticker-${instrument}`;
+    
+    if (this.intervals.has(key)) {
+      console.warn(`Already polling ticker for ${instrument}`);
+      return;
+    }
+
+    const interval = setInterval(async () => {
+      try {
+        const ticker = await this.mdg.miniTicker({ instrument });
+        callback(ticker.result);
+      } catch (error) {
+        console.error(`Error polling ${instrument}:`, error.message);
+      }
+    }, intervalMs);
+
+    this.intervals.set(key, interval);
+  }
+
+  stop(key: string) {
+    const interval = this.intervals.get(key);
+    if (interval) {
+      clearInterval(interval);
+      this.intervals.delete(key);
+    }
+  }
+
+  stopAll() {
+    this.intervals.forEach(interval => clearInterval(interval));
+    this.intervals.clear();
+  }
+}
+
+const poller = new MarketDataPoller(mdg);
+
+poller.pollTicker('BTC_USDT_Perp', (ticker) => {
+  console.log('BTC price:', ticker.last_price);
+}, 2000);
+
+// Stop after 1 minute
+setTimeout(() => poller.stopAll(), 60000);
+```

@@ -1,0 +1,500 @@
+---
+title: "Vault Operations"
+description: "Invest in and redeem from vaults"
+---
+
+## Standard Vault Operations
+
+### vaultInvest
+
+Invest funds into a vault.
+
+```typescript
+vaultInvest(payload: IApiVaultInvestRequest, config?: AxiosRequestConfig): Promise<IAckResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiVaultInvestRequest" required>
+  The vault investment request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IAckResponse">
+  Acknowledgment response
+</ResponseField>
+
+---
+
+### vaultRedeem
+
+Redeem funds from a vault.
+
+```typescript
+vaultRedeem(payload: IApiVaultRedeemRequest, config?: AxiosRequestConfig): Promise<IAckResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiVaultRedeemRequest" required>
+  The vault redemption request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IAckResponse">
+  Acknowledgment response
+</ResponseField>
+
+---
+
+### vaultRedeemCancel
+
+Cancel a pending redemption request.
+
+```typescript
+vaultRedeemCancel(payload: IApiVaultRedeemCancelRequest, config?: AxiosRequestConfig): Promise<IAckResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiVaultRedeemCancelRequest" required>
+  The redemption cancellation request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IAckResponse">
+  Acknowledgment response
+</ResponseField>
+
+---
+
+### vaultInvestorSummary
+
+Get investor summary for a vault.
+
+```typescript
+vaultInvestorSummary(payload: IApiVaultInvestorSummaryRequest, config?: AxiosRequestConfig): Promise<IApiVaultInvestorSummaryResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiVaultInvestorSummaryRequest" required>
+  The vault investor summary request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IApiVaultInvestorSummaryResponse">
+  Vault investor summary data
+</ResponseField>
+
+---
+
+### vaultInvestorHistory
+
+Query vault investor history.
+
+```typescript
+vaultInvestorHistory(payload: IApiQueryVaultInvestorHistoryRequest, config?: AxiosRequestConfig): Promise<IApiQueryVaultInvestorHistoryResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiQueryVaultInvestorHistoryRequest" required>
+  The investor history query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IApiQueryVaultInvestorHistoryResponse">
+  Vault investor history data
+</ResponseField>
+
+---
+
+### vaultManagerInvestorHistory
+
+Query vault investor history as a vault manager.
+
+```typescript
+vaultManagerInvestorHistory(payload: IApiQueryVaultManagerInvestorHistoryRequest, config?: AxiosRequestConfig): Promise<IApiQueryVaultManagerInvestorHistoryResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiQueryVaultManagerInvestorHistoryRequest" required>
+  The manager investor history query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IApiQueryVaultManagerInvestorHistoryResponse">
+  Vault manager investor history data
+</ResponseField>
+
+---
+
+### vaultViewRedemptionQueue
+
+View the redemption queue for a vault.
+
+```typescript
+vaultViewRedemptionQueue(payload: IApiVaultViewRedemptionQueueRequest, config?: AxiosRequestConfig): Promise<IApiVaultViewRedemptionQueueResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiVaultViewRedemptionQueueRequest" required>
+  The redemption queue query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IApiVaultViewRedemptionQueueResponse">
+  Redemption queue data
+</ResponseField>
+
+---
+
+### vaultBurnTokens
+
+Burn vault LP tokens.
+
+```typescript
+vaultBurnTokens(payload: IApiVaultBurnTokensRequest, config?: AxiosRequestConfig): Promise<IAckResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiVaultBurnTokensRequest" required>
+  The burn tokens request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IAckResponse">
+  Acknowledgment response
+</ResponseField>
+
+---
+
+## Cross-Exchange Vault Operations
+
+### cevInvest
+
+Invest in a cross-exchange vault.
+
+```typescript
+cevInvest(payload: IApiVaultInvestRequest, config?: AxiosRequestConfig): Promise<IAckResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiVaultInvestRequest" required>
+  The cross-exchange vault investment request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IAckResponse">
+  Acknowledgment response
+</ResponseField>
+
+---
+
+### cevInvestCancel
+
+Cancel a pending cross-exchange vault investment.
+
+```typescript
+cevInvestCancel(payload: IApiCrossExchVaultInvestCancelRequest, config?: AxiosRequestConfig): Promise<IAckResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiCrossExchVaultInvestCancelRequest" required>
+  The investment cancellation request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IAckResponse">
+  Acknowledgment response
+</ResponseField>
+
+---
+
+### cevViewInvestmentQueue
+
+View the investment queue for a cross-exchange vault.
+
+```typescript
+cevViewInvestmentQueue(payload: IApiCrossExchVaultViewInvestmentQueueRequest, config?: AxiosRequestConfig): Promise<IApiCrossExchVaultViewInvestmentQueueResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiCrossExchVaultViewInvestmentQueueRequest" required>
+  The investment queue query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IApiCrossExchVaultViewInvestmentQueueResponse">
+  Investment queue data
+</ResponseField>
+
+---
+
+### cevViewPendingInvestment
+
+View pending investment for a cross-exchange vault.
+
+```typescript
+cevViewPendingInvestment(payload: IApiCrossExchVaultViewPendingInvestmentRequest, config?: AxiosRequestConfig): Promise<IApiCrossExchVaultViewPendingInvestmentResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiCrossExchVaultViewPendingInvestmentRequest" required>
+  The pending investment query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IApiCrossExchVaultViewPendingInvestmentResponse">
+  Pending investment data
+</ResponseField>
+
+---
+
+### cevGetInvestorAllocationStats
+
+Get investor allocation statistics for a cross-exchange vault.
+
+```typescript
+cevGetInvestorAllocationStats(payload = {}, config?: AxiosRequestConfig): Promise<IApiCrossExchVaultGetInvestorAllocationStatsResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="object">
+  Optional request payload (defaults to empty object)
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IApiCrossExchVaultGetInvestorAllocationStatsResponse">
+  Investor allocation statistics
+</ResponseField>
+
+---
+
+### cevAttestEquity
+
+Attest equity for a cross-exchange vault.
+
+```typescript
+cevAttestEquity(payload: IApiCrossExchVaultAttestEquityRequest, config?: AxiosRequestConfig): Promise<IAckResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiCrossExchVaultAttestEquityRequest" required>
+  The equity attestation request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IAckResponse">
+  Acknowledgment response
+</ResponseField>
+
+---
+
+### cevTriggerRedemption
+
+Trigger redemption for a cross-exchange vault.
+
+```typescript
+cevTriggerRedemption(payload: IApiCrossExchVaultTriggerRedemptionRequest, config?: AxiosRequestConfig): Promise<IAckResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiCrossExchVaultTriggerRedemptionRequest" required>
+  The redemption trigger request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IAckResponse">
+  Acknowledgment response
+</ResponseField>
+
+---
+
+### cevPreInternalTransferCheck
+
+Validate an internal transfer for a cross-exchange vault.
+
+```typescript
+cevPreInternalTransferCheck(payload: IApiCrossExchVaultPreInternalTransferCheckRequest, config?: AxiosRequestConfig): Promise<IApiCrossExchVaultPreInternalTransferCheckResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiCrossExchVaultPreInternalTransferCheckRequest" required>
+  The transfer validation request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IApiCrossExchVaultPreInternalTransferCheckResponse">
+  Transfer validation results
+</ResponseField>
+
+---
+
+### cevPreWithdrawCheck
+
+Validate a withdrawal from a cross-exchange vault.
+
+```typescript
+cevPreWithdrawCheck(payload: IApiCrossExchVaultPreWithdrawCheckRequest, config?: AxiosRequestConfig): Promise<IApiCrossExchVaultPreWithdrawCheckResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiCrossExchVaultPreWithdrawCheckRequest" required>
+  The withdrawal validation request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IApiCrossExchVaultPreWithdrawCheckResponse">
+  Withdrawal validation results
+</ResponseField>
+
+---
+
+### cevLock
+
+Lock a cross-exchange vault.
+
+```typescript
+cevLock(payload: IApiCrossExchVaultLockRequest, config?: AxiosRequestConfig): Promise<IAckResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiCrossExchVaultLockRequest" required>
+  The vault lock request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IAckResponse">
+  Acknowledgment response
+</ResponseField>
+
+---
+
+### cevUnlock
+
+Unlock a cross-exchange vault.
+
+```typescript
+cevUnlock(payload: IApiCrossExchVaultUnlockRequest, config?: AxiosRequestConfig): Promise<IAckResponse>
+```
+
+#### Parameters
+
+<ParamField path="payload" type="IApiCrossExchVaultUnlockRequest" required>
+  The vault unlock request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+#### Returns
+
+<ResponseField name="response" type="IAckResponse">
+  Acknowledgment response
+</ResponseField>

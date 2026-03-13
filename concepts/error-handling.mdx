@@ -1,0 +1,476 @@
+---
+title: Error Handling
+description: Learn how to handle errors when using the GRVT JavaScript Client SDK
+---
+
+## Overview
+
+The GRVT JavaScript Client SDK provides structured error handling for API failures. All errors are thrown as Axios errors with GRVT-specific error data included in the response.
+
+## Error Structure
+
+Errors from the GRVT API follow the `IError` interface defined in `src/interfaces/codegen/data.interface.ts:3404`:
+
+```typescript
+export interface IError {
+  // The error code for the request
+  code?: number
+  // The error message for the request
+  message?: string
+}
+```
+
+### Error Properties
+
+<ParamField path="code" type="number">
+  A numeric error code identifying the specific error type.
+</ParamField>
+
+<ParamField path="message" type="string">
+  A human-readable error message describing what went wrong.
+</ParamField>
+
+## Error Transformation
+
+The SDK automatically transforms API errors using the `coverApiError` utility from `src/utils/index.ts:86`:
+
+```typescript
+static coverApiError (error: AxiosError): never {
+  if (error?.response?.data) {
+    error.response.data = Utils.schemaMap(error.response.data, ERROR_MAP.LITE_TO_FULL) as IError
+  }
+  throw error as AxiosError<IError>
+}
+```
+
+This utility:
+1. Checks if the error has response data
+2. Transforms the lite schema error format to the full schema format
+3. Throws the error as an `AxiosError<IError>` with properly typed error data
+
+## Error Interception
+
+The SDK also includes a response interceptor that extracts custom API messages from `src/services/restful.service.ts:9`:
+
+```typescript
+instance.interceptors.response.use(undefined, (error) => {
+  if (error.response?.data?.api_msg) {
+    error.message = error.response.data.api_msg
+  }
+  throw error
+})
+```
+
+This interceptor replaces the generic error message with the API-specific message when available.
+
+## Catching and Handling Errors
+
+### Basic Error Handling
+
+```typescript
+import type { AxiosError } from 'axios'
+import type { IError } from '@grvt/client'
+import { TDG } from '@grvt/client'
+
+const tdg = new TDG({
+  host: 'https://api.grvt.io'
+})
+
+try {
+  const order = await tdg.createOrder({
+    subAccountId: 'your-sub-account-id',
+    instrument: 'BTC-PERP',
+    size: '0.1',
+    // ... other parameters
+  })
+  console.log('Order created:', order)
+} catch (error) {
+  const axiosError = error as AxiosError<IError>
+  
+  if (axiosError.response?.data) {
+    const grvtError = axiosError.response.data
+    console.error(`Error ${grvtError.code}: ${grvtError.message}`)
+  } else {
+    console.error('Network or other error:', axiosError.message)
+  }
+}
+```
+
+### Handling Specific Error Codes
+
+```typescript
+import type { AxiosError } from 'axios'
+import type { IError } from '@grvt/client'
+import { TDG } from '@grvt/client'
+
+const tdg = new TDG({
+  host: 'https://api.grvt.io'
+})
+
+try {
+  const positions = await tdg.positions({
+    subAccountId: 'your-sub-account-id'
+  })
+} catch (error) {
+  const axiosError = error as AxiosError<IError>
+  const errorData = axiosError.response?.data
+  
+  if (errorData) {
+    switch (errorData.code) {
+      case 400:
+        console.error('Bad request:', errorData.message)
+        // Handle validation errors
+        break
+      case 401:
+        console.error('Unauthorized:', errorData.message)
+        // Redirect to login
+        break
+      case 403:
+        console.error('Forbidden:', errorData.message)
+        // Handle permission errors
+        break
+      case 404:
+        console.error('Not found:', errorData.message)
+        // Handle missing resource
+        break
+      case 429:
+        console.error('Rate limit exceeded:', errorData.message)
+        // Implement backoff strategy
+        break
+      case 500:
+        console.error('Server error:', errorData.message)
+        // Retry or alert
+        break
+      default:
+        console.error(`Error ${errorData.code}: ${errorData.message}`)
+    }
+  }
+}
+```
+
+### Handling HTTP Status Codes
+
+```typescript
+import type { AxiosError } from 'axios'
+import type { IError } from '@grvt/client'
+import { MDG } from '@grvt/client'
+
+const mdg = new MDG({
+  host: 'https://market-data.dev.gravitymarkets.io'
+})
+
+try {
+  const ticker = await mdg.ticker({ instrument: 'BTC-PERP' })
+} catch (error) {
+  const axiosError = error as AxiosError<IError>
+  
+  // Check HTTP status code
+  const status = axiosError.response?.status
+  
+  if (status === 401) {
+    console.error('Authentication required')
+  } else if (status === 404) {
+    console.error('Instrument not found')
+  } else if (status && status >= 500) {
+    console.error('Server error, please try again later')
+  } else {
+    console.error('Request failed:', axiosError.message)
+  }
+}
+```
+
+## Network Errors
+
+Network errors (no response from server) don't have response data:
+
+```typescript
+import type { AxiosError } from 'axios'
+import type { IError } from '@grvt/client'
+import { TDG } from '@grvt/client'
+
+const tdg = new TDG({
+  host: 'https://api.grvt.io'
+})
+
+try {
+  const order = await tdg.createOrder({
+    subAccountId: 'your-sub-account-id',
+    instrument: 'BTC-PERP',
+    size: '0.1'
+  })
+} catch (error) {
+  const axiosError = error as AxiosError<IError>
+  
+  if (!axiosError.response) {
+    // Network error - no response received
+    console.error('Network error:', axiosError.message)
+    
+    if (axiosError.code === 'ECONNREFUSED') {
+      console.error('Connection refused - server may be down')
+    } else if (axiosError.code === 'ETIMEDOUT') {
+      console.error('Request timeout - server did not respond in time')
+    }
+  } else {
+    // API error with response
+    console.error('API error:', axiosError.response.data)
+  }
+}
+```
+
+## Request Timeout Configuration
+
+```typescript
+import type { AxiosRequestConfig } from 'axios'
+import { TDG } from '@grvt/client'
+
+const tdg = new TDG({
+  host: 'https://api.grvt.io'
+})
+
+const config: AxiosRequestConfig = {
+  timeout: 5000 // 5 seconds
+}
+
+try {
+  const positions = await tdg.positions(
+    { subAccountId: 'your-sub-account-id' },
+    config
+  )
+} catch (error) {
+  const axiosError = error as AxiosError<IError>
+  
+  if (axiosError.code === 'ECONNABORTED') {
+    console.error('Request timeout after 5 seconds')
+  }
+}
+```
+
+## Global Error Handler
+
+Implement a global error handler for consistent error handling:
+
+```typescript
+import type { AxiosError } from 'axios'
+import type { IError } from '@grvt/client'
+
+function handleGRVTError(error: unknown): never {
+  const axiosError = error as AxiosError<IError>
+  
+  if (axiosError.response?.data) {
+    const grvtError = axiosError.response.data
+    const status = axiosError.response.status
+    
+    // Log structured error
+    console.error('GRVT API Error:', {
+      status,
+      code: grvtError.code,
+      message: grvtError.message,
+      endpoint: axiosError.config?.url
+    })
+    
+    // Handle specific cases
+    if (status === 401) {
+      // Redirect to login
+      window.location.href = '/login'
+    }
+  } else {
+    // Network error
+    console.error('Network Error:', {
+      message: axiosError.message,
+      code: axiosError.code
+    })
+  }
+  
+  throw error
+}
+
+// Usage
+import { TDG } from '@grvt/client'
+
+const tdg = new TDG({
+  host: 'https://api.grvt.io'
+})
+
+try {
+  const order = await tdg.createOrder({
+    subAccountId: 'your-sub-account-id',
+    instrument: 'BTC-PERP',
+    size: '0.1'
+  })
+} catch (error) {
+  handleGRVTError(error)
+}
+```
+
+## Retry Logic
+
+Implement retry logic for transient failures:
+
+```typescript
+import type { AxiosError } from 'axios'
+import type { IError } from '@grvt/client'
+import { TDG } from '@grvt/client'
+
+const tdg = new TDG({
+  host: 'https://api.grvt.io'
+})
+
+async function retryRequest<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3,
+  delay = 1000
+): Promise<T> {
+  let lastError: Error
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn()
+    } catch (error) {
+      const axiosError = error as AxiosError<IError>
+      lastError = error as Error
+      
+      // Only retry on network errors or 5xx server errors
+      const status = axiosError.response?.status
+      const shouldRetry = !status || (status >= 500 && status < 600)
+      
+      if (!shouldRetry || i === maxRetries - 1) {
+        throw error
+      }
+      
+      // Exponential backoff
+      await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)))
+    }
+  }
+  
+  throw lastError!
+}
+
+// Usage
+try {
+  const positions = await retryRequest(() =>
+    tdg.positions({ subAccountId: 'your-sub-account-id' })
+  )
+  console.log('Positions:', positions)
+} catch (error) {
+  console.error('Failed after retries:', error)
+}
+```
+
+## Error Logging
+
+Integrate with logging services:
+
+```typescript
+import type { AxiosError } from 'axios'
+import type { IError } from '@grvt/client'
+import { TDG } from '@grvt/client'
+
+const tdg = new TDG({
+  host: 'https://api.grvt.io'
+})
+
+// Add response interceptor for logging
+tdg.axios.interceptors.response.use(
+  response => response,
+  error => {
+    const axiosError = error as AxiosError<IError>
+    
+    // Log to your monitoring service
+    logToMonitoring({
+      type: 'api_error',
+      url: axiosError.config?.url,
+      method: axiosError.config?.method,
+      status: axiosError.response?.status,
+      error: axiosError.response?.data,
+      timestamp: new Date().toISOString()
+    })
+    
+    throw error
+  }
+)
+
+function logToMonitoring(data: any) {
+  // Send to your logging service (e.g., Sentry, DataDog, etc.)
+  console.error('Monitoring:', data)
+}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Always Type Your Errors">
+    Use TypeScript to properly type errors for better IDE support:
+    
+    ```typescript
+    import type { AxiosError } from 'axios'
+    import type { IError } from '@grvt/client'
+    
+    try {
+      // ... API call
+    } catch (error) {
+      const axiosError = error as AxiosError<IError>
+      // Now you have full type safety
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Check for Response Before Accessing Data">
+    Always verify the response exists before accessing error data:
+    
+    ```typescript
+    if (axiosError.response?.data) {
+      // Safe to access error code and message
+      console.error(axiosError.response.data.message)
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Handle Both API and Network Errors">
+    Network errors don't have response data:
+    
+    ```typescript
+    if (axiosError.response) {
+      // API error
+      console.error('API error:', axiosError.response.data)
+    } else {
+      // Network error
+      console.error('Network error:', axiosError.message)
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="Use Specific Error Codes">
+    Check error codes for specific handling logic:
+    
+    ```typescript
+    switch (axiosError.response?.data?.code) {
+      case 401:
+        // Handle authentication
+        break
+      case 429:
+        // Handle rate limiting
+        break
+      // etc.
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Common Error Scenarios
+
+| Error Code | Description | Recommended Action |
+|------------|-------------|--------------------|
+| 400 | Bad Request | Validate input parameters |
+| 401 | Unauthorized | Re-authenticate user |
+| 403 | Forbidden | Check user permissions |
+| 404 | Not Found | Verify resource exists |
+| 429 | Too Many Requests | Implement rate limiting/backoff |
+| 500 | Internal Server Error | Retry with exponential backoff |
+| 503 | Service Unavailable | Wait and retry |
+
+## Next Steps
+
+- Review [Configuration](/concepts/configuration) for SDK setup
+- Learn about [Authentication](/concepts/authentication) patterns
+- Explore [TDG Methods](/api/tdg/overview) for trading operations
+- Explore [MDG Methods](/api/mdg/overview) for market data

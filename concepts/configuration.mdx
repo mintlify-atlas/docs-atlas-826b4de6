@@ -1,0 +1,160 @@
+---
+title: Configuration
+description: Learn how to configure the GRVT JavaScript Client SDK with the IConfig interface
+---
+
+## Overview
+
+The GRVT JavaScript Client SDK requires configuration to connect to GRVT APIs. Both the TDG (Trading Data Gateway) and MDG (Market Data Gateway) classes accept an `IConfig` object to establish the connection endpoint and API version.
+
+## Configuration Interface
+
+The SDK uses the `IConfig` interface defined in `src/interfaces/config.interface.ts:1`:
+
+```typescript
+export interface IConfig {
+  host: string
+  version?: `v${number}`
+}
+```
+
+### Configuration Properties
+
+<ParamField path="host" type="string" required>
+  The base URL of the GRVT API endpoint. This should not include a trailing slash.
+  
+  **Examples:**
+  - Production: `https://api.grvt.io`
+  - Development: `https://market-data.dev.gravitymarkets.io`
+</ParamField>
+
+<ParamField path="version" type="string" default="v1">
+  The API version to use. Must follow the pattern `v${number}` (e.g., `v1`, `v2`).
+  
+  If not specified, defaults to `'v1'`.
+</ParamField>
+
+## Configuration Validation
+
+The SDK automatically validates and normalizes configuration using the `validConfig` function from `src/interfaces/config.interface.ts:6`:
+
+```typescript
+export const validConfig = (config: IConfig) => {
+  if (!config?.host) {
+    throw new Error('API requires a host')
+  }
+
+  config.host = config.host.endsWith('/')
+    ? config.host.slice(0, -1)
+    : config.host
+
+  return {
+    ...config,
+    version: config.version ?? 'v1'
+  }
+}
+```
+
+### Validation Behavior
+
+1. **Host Requirement**: The `host` property is mandatory. If missing, the SDK throws an error.
+2. **Trailing Slash Removal**: The function automatically removes trailing slashes from the host URL.
+3. **Default Version**: If no version is specified, the SDK defaults to `'v1'`.
+
+## Usage Examples
+
+### Creating a Trading Data Gateway (TDG) Client
+
+```typescript
+import { TDG } from '@grvt/client'
+
+const tdg = new TDG({
+  host: 'https://api.grvt.io',
+  version: 'v1'
+})
+```
+
+### Creating a Market Data Gateway (MDG) Client
+
+```typescript
+import { MDG } from '@grvt/client'
+
+const mdg = new MDG({
+  host: 'https://market-data.dev.gravitymarkets.io',
+  version: 'v1'
+})
+```
+
+### Using Default Export
+
+```typescript
+import GRVT from '@grvt/client'
+
+const mdg = new GRVT.MDG({
+  host: 'https://market-data.dev.gravitymarkets.io'
+  // version defaults to 'v1'
+})
+
+const tdg = new GRVT.TDG({
+  host: 'https://api.grvt.io'
+})
+```
+
+### CommonJS Usage
+
+```javascript
+const GRVT = require('@grvt/client')
+
+const mdg = new GRVT.MDG({
+  host: 'https://market-data.dev.gravitymarkets.io',
+  version: 'v1'
+})
+```
+
+## URL Construction
+
+The SDK constructs full API URLs by combining the host and version. Both TDG and MDG classes create two internal URLs:
+
+```typescript
+const parseConfig = validConfig(config)
+this._fullUrl = `${parseConfig.host}/full/${parseConfig.version}`
+this._liteUrl = `${parseConfig.host}/lite/${parseConfig.version}`
+```
+
+For example, with `host: 'https://api.grvt.io'` and `version: 'v1'`:
+- Full URL: `https://api.grvt.io/full/v1`
+- Lite URL: `https://api.grvt.io/lite/v1`
+
+## Environment-Specific Configuration
+
+<Tip>
+Consider using environment variables to manage different configurations across development, staging, and production environments.
+</Tip>
+
+```typescript
+const config: IConfig = {
+  host: process.env.GRVT_API_HOST || 'https://api.grvt.io',
+  version: (process.env.GRVT_API_VERSION as `v${number}`) || 'v1'
+}
+
+const tdg = new TDG(config)
+```
+
+## Error Handling
+
+If you attempt to create a client without a host, the SDK will throw an error:
+
+```typescript
+try {
+  const tdg = new TDG({} as IConfig)
+} catch (error) {
+  console.error(error.message) // "API requires a host"
+}
+```
+
+## Next Steps
+
+- Learn about [Authentication](/concepts/authentication) to make authenticated API calls
+- Understand [Error Handling](/concepts/error-handling) when working with the SDK
+- Explore the [TDG API Reference](/api/tdg/overview) for trading operations
+- Explore the [MDG API Reference](/api/mdg/overview) for market data operations

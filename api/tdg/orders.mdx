@@ -1,0 +1,472 @@
+---
+title: "Order Methods"
+description: "Create, cancel, and query orders using the TDG class"
+---
+
+## createOrder
+
+Create a new order on the exchange.
+
+```typescript
+createOrder(payload: IApiCreateOrderRequest, config?: AxiosRequestConfig): Promise<IApiCreateOrderResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiCreateOrderRequest" required>
+  The order creation request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiCreateOrderResponse">
+  The created order details
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#create-order)
+
+---
+
+## createBulkOrders
+
+Create multiple orders in a single request.
+
+```typescript
+createBulkOrders(payload: IApiCreateBulkOrdersRequest, config?: AxiosRequestConfig): Promise<IApiCreateBulkOrdersResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiCreateBulkOrdersRequest" required>
+  The bulk order creation request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiCreateBulkOrdersResponse">
+  The results of the bulk order creation
+</ResponseField>
+
+---
+
+## bulkOrders
+
+Query multiple orders by their IDs.
+
+```typescript
+bulkOrders(payload: IApiBulkOrdersRequest, config?: AxiosRequestConfig): Promise<IApiBulkOrdersResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiBulkOrdersRequest" required>
+  The bulk order query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiBulkOrdersResponse">
+  The queried orders
+</ResponseField>
+
+---
+
+## cancelOrder
+
+Cancel a specific order.
+
+```typescript
+cancelOrder(payload: IApiCancelOrderRequest, config?: AxiosRequestConfig): Promise<IApiCancelOrderResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiCancelOrderRequest" required>
+  The order cancellation request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiCancelOrderResponse">
+  The cancellation result
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#cancel-order)
+
+---
+
+## cancelAllOrders
+
+Cancel all open orders, optionally filtered by instrument or sub-account.
+
+```typescript
+cancelAllOrders(payload: IApiCancelAllOrdersRequest, config?: AxiosRequestConfig): Promise<IApiCancelAllOrdersResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiCancelAllOrdersRequest" required>
+  The cancel all orders request with optional filters
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiCancelAllOrdersResponse">
+  The cancellation results
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#cancel-all-orders)
+
+---
+
+## order
+
+Get details of a specific order.
+
+```typescript
+order(payload: IApiGetOrderRequest, config?: AxiosRequestConfig): Promise<IApiGetOrderResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiGetOrderRequest" required>
+  The order query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiGetOrderResponse">
+  The order details
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#get-order)
+
+---
+
+## openOrders
+
+Get all currently open orders.
+
+```typescript
+openOrders(payload: IApiOpenOrdersRequest, config?: AxiosRequestConfig): Promise<IApiOpenOrdersResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiOpenOrdersRequest" required>
+  The open orders query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiOpenOrdersResponse">
+  List of open orders
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#open-orders)
+
+---
+
+## orderHistory
+
+Query historical orders.
+
+```typescript
+orderHistory(payload: IApiOrderHistoryRequest, config?: AxiosRequestConfig): Promise<IApiOrderHistoryResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiOrderHistoryRequest" required>
+  The order history query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiOrderHistoryResponse">
+  Historical order data
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#order-history)
+
+---
+
+## orderGroup
+
+Get details of an order group.
+
+```typescript
+orderGroup(payload: IApiGetOrderGroupRequest, config?: AxiosRequestConfig): Promise<IApiGetOrderGroupResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiGetOrderGroupRequest" required>
+  The order group query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiGetOrderGroupResponse">
+  The order group details
+</ResponseField>
+
+---
+
+## replaceOrders
+
+Replace position's take profit and stop loss orders.
+
+```typescript
+replaceOrders(payload: IApiReplaceOrdersRequest, config?: AxiosRequestConfig): Promise<IApiReplaceOrdersResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiReplaceOrdersRequest" required>
+  The replace orders request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiReplaceOrdersResponse">
+  The replacement results
+</ResponseField>
+
+---
+
+## preOrderCheck
+
+Validate an order before submission.
+
+```typescript
+preOrderCheck(payload: IApiPreOrderCheckRequest, config?: AxiosRequestConfig): Promise<IApiPreOrderCheckResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiPreOrderCheckRequest" required>
+  The pre-order check request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiPreOrderCheckResponse">
+  Validation results
+</ResponseField>
+
+---
+
+## getPriceProtectionBands
+
+Get current price protection bands.
+
+```typescript
+getPriceProtectionBands(config?: AxiosRequestConfig): Promise<IApiGetPriceProtectionBandsResponse>
+```
+
+### Parameters
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiGetPriceProtectionBandsResponse">
+  Price protection band information
+</ResponseField>
+
+---
+
+## dedustPosition
+
+Close small (dust) positions.
+
+```typescript
+dedustPosition(payload: IApiDedustPositionRequest, config?: AxiosRequestConfig): Promise<IApiDedustPositionResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiDedustPositionRequest" required>
+  The dedust position request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiDedustPositionResponse">
+  The dedust operation results
+</ResponseField>
+
+---
+
+## getAllInitialLeverage
+
+Get all initial leverage settings.
+
+```typescript
+getAllInitialLeverage(payload: IApiGetAllInitialLeverageRequest, config?: AxiosRequestConfig): Promise<IApiGetAllInitialLeverageResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiGetAllInitialLeverageRequest" required>
+  The leverage query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiGetAllInitialLeverageResponse">
+  All leverage settings
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#get-all-initial-leverage)
+
+---
+
+## setInitialLeverage
+
+Set initial leverage for an instrument.
+
+```typescript
+setInitialLeverage(payload: IApiSetInitialLeverageRequest, config?: AxiosRequestConfig): Promise<IApiSetInitialLeverageResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiSetInitialLeverageRequest" required>
+  The leverage configuration request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiSetInitialLeverageResponse">
+  The updated leverage settings
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#set-initial-leverage)
+
+---
+
+## getMarginTiers
+
+Get margin tier information.
+
+```typescript
+getMarginTiers(config?: AxiosRequestConfig): Promise<IApiGetMarginTiersResponse>
+```
+
+### Parameters
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiGetMarginTiersResponse">
+  Margin tier data
+</ResponseField>
+
+---
+
+## fundingPaymentHistory
+
+Query funding payment history.
+
+```typescript
+fundingPaymentHistory(payload: IApiFundingPaymentHistoryRequest, config?: AxiosRequestConfig): Promise<IApiFundingPaymentHistoryResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiFundingPaymentHistoryRequest" required>
+  The funding payment history request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiFundingPaymentHistoryResponse">
+  Funding payment history data
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#funding-payment-history)

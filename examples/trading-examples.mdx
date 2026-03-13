@@ -1,0 +1,600 @@
+---
+title: Trading Examples
+description: Learn how to execute trades, manage orders, and handle positions with the GRVT TDG client
+---
+
+## Overview
+
+The Trading Data Gateway (TDG) provides access to all trading operations including order management, position tracking, account data, and transfers. All TDG endpoints require authentication.
+
+```typescript
+import { TDG } from '@grvt/client';
+
+const tdg = new TDG({
+  host: 'https://api.grvt.io',
+  version: 'v1'
+});
+```
+
+<Note>
+Make sure you've configured your API credentials and have the necessary permissions before executing trades.
+</Note>
+
+## Account Management
+
+### Get Sub-Account Summary
+
+```typescript
+const summary = await tdg.subAccountSummary({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID'
+});
+
+const s = summary.result;
+console.log('Total equity:', s.total_equity);
+console.log('Available balance:', s.total_available_balance);
+console.log('Initial margin:', s.total_initial_margin);
+console.log('Maintenance margin:', s.total_maintenance_margin);
+console.log('Unrealized PnL:', s.total_unrealized_pnl);
+console.log('Account leverage:', s.account_leverage);
+```
+
+### Get Account History
+
+```typescript
+// Get account balance history for the last 7 days
+const history = await tdg.subAccountHistory({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  from: (Date.now() - 7 * 24 * 60 * 60 * 1000).toString(),
+  to: Date.now().toString()
+});
+
+history.result.forEach(snapshot => {
+  console.log(`${new Date(snapshot.timestamp)}:`);
+  console.log(`  Equity: ${snapshot.total_equity}`);
+  console.log(`  PnL: ${snapshot.total_pnl}`);
+});
+```
+
+### Get Aggregated Account Summary
+
+```typescript
+// Get summary across all sub-accounts
+const aggregated = await tdg.aggregatedAccountSummary();
+
+console.log('Total equity across all accounts:', aggregated.result.total_equity);
+console.log('Total positions value:', aggregated.result.total_positions_value);
+```
+
+## Order Management
+
+### Create Limit Orders
+
+```typescript
+// Buy limit order
+const buyOrder = await tdg.createOrder({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  instrument: 'BTC_USDT_Perp',
+  is_market: false,
+  size: '0.1', // Buy 0.1 BTC
+  limit_price: '50000.00',
+  time_in_force: 'GTC', // Good till cancelled
+  post_only: true // Ensure maker order
+});
+
+console.log('Order ID:', buyOrder.result.order_id);
+console.log('Status:', buyOrder.result.metadata.status);
+
+// Sell limit order
+const sellOrder = await tdg.createOrder({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  instrument: 'BTC_USDT_Perp',
+  is_market: false,
+  size: '-0.1', // Sell 0.1 BTC (negative size)
+  limit_price: '52000.00',
+  time_in_force: 'GTC'
+});
+```
+
+### Create Market Orders
+
+```typescript
+// Market buy order
+const marketBuy = await tdg.createOrder({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  instrument: 'ETH_USDT_Perp',
+  is_market: true,
+  size: '1.0',
+  time_in_force: 'IOC' // Immediate or cancel
+});
+
+console.log('Filled at:', marketBuy.result.metadata.avg_fill_price);
+console.log('Filled size:', marketBuy.result.metadata.filled_size);
+```
+
+### Create Orders with Stop Loss and Take Profit
+
+```typescript
+// Open a long position with SL/TP
+const entryOrder = await tdg.createOrder({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  instrument: 'BTC_USDT_Perp',
+  is_market: true,
+  size: '0.5',
+  time_in_force: 'IOC'
+});
+
+const entryPrice = parseFloat(entryOrder.result.metadata.avg_fill_price);
+
+// Set stop loss 2% below entry
+const stopLoss = await tdg.createOrder({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  instrument: 'BTC_USDT_Perp',
+  is_market: false,
+  size: '-0.5',
+  trigger_price: (entryPrice * 0.98).toFixed(2),
+  time_in_force: 'GTC',
+  order_type: 'STOP_LOSS'
+});
+
+// Set take profit 5% above entry
+const takeProfit = await tdg.createOrder({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  instrument: 'BTC_USDT_Perp',
+  is_market: false,
+  size: '-0.5',
+  limit_price: (entryPrice * 1.05).toFixed(2),
+  time_in_force: 'GTC'
+});
+
+console.log('Position opened with SL/TP');
+console.log('Stop Loss ID:', stopLoss.result.order_id);
+console.log('Take Profit ID:', takeProfit.result.order_id);
+```
+
+### Create Bulk Orders
+
+```typescript
+// Place multiple orders at once
+const bulkOrders = await tdg.createBulkOrders({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  orders: [
+    {
+      instrument: 'BTC_USDT_Perp',
+      is_market: false,
+      size: '0.05',
+      limit_price: '49000.00',
+      time_in_force: 'GTC'
+    },
+    {
+      instrument: 'BTC_USDT_Perp',
+      is_market: false,
+      size: '0.05',
+      limit_price: '48500.00',
+      time_in_force: 'GTC'
+    },
+    {
+      instrument: 'BTC_USDT_Perp',
+      is_market: false,
+      size: '0.05',
+      limit_price: '48000.00',
+      time_in_force: 'GTC'
+    }
+  ]
+});
+
+console.log(`Placed ${bulkOrders.result.length} orders`);
+```
+
+### Pre-Order Check
+
+```typescript
+// Validate order before placing
+const preCheck = await tdg.preOrderCheck({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  instrument: 'BTC_USDT_Perp',
+  is_market: false,
+  size: '1.0',
+  limit_price: '50000.00'
+});
+
+if (preCheck.result.is_valid) {
+  console.log('Order is valid, proceeding...');
+  const order = await tdg.createOrder({
+    sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+    instrument: 'BTC_USDT_Perp',
+    is_market: false,
+    size: '1.0',
+    limit_price: '50000.00',
+    time_in_force: 'GTC'
+  });
+} else {
+  console.error('Order validation failed:', preCheck.result.reason);
+}
+```
+
+### Cancel Orders
+
+```typescript
+// Cancel a specific order
+const cancelled = await tdg.cancelOrder({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  order_id: 'ORDER_ID_TO_CANCEL'
+});
+
+console.log('Cancelled order:', cancelled.result.order_id);
+
+// Cancel all orders for an instrument
+const cancelledAll = await tdg.cancelAllOrders({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log(`Cancelled ${cancelledAll.result.length} orders`);
+
+// Cancel all orders across all instruments
+const cancelledEverything = await tdg.cancelAllOrders({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID'
+});
+```
+
+### Query Orders
+
+```typescript
+// Get open orders
+const openOrders = await tdg.openOrders({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log(`${openOrders.result.length} open orders:`);
+openOrders.result.forEach(order => {
+  console.log(`  ${order.order_id}: ${order.size} @ ${order.limit_price}`);
+});
+
+// Get order history
+const orderHistory = await tdg.orderHistory({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  instrument: 'BTC_USDT_Perp',
+  from: (Date.now() - 24 * 60 * 60 * 1000).toString(),
+  to: Date.now().toString()
+});
+
+console.log(`${orderHistory.result.length} orders in last 24h`);
+
+// Get specific order details
+const orderDetails = await tdg.order({
+  order_id: 'SPECIFIC_ORDER_ID'
+});
+
+console.log('Order details:', orderDetails.result);
+```
+
+## Position Management
+
+### Get All Positions
+
+```typescript
+const positions = await tdg.positions({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID'
+});
+
+console.log(`${positions.result.length} open positions:`);
+positions.result.forEach(pos => {
+  console.log(`\n${pos.instrument}:`);
+  console.log(`  Size: ${pos.size}`);
+  console.log(`  Entry price: ${pos.avg_entry_price}`);
+  console.log(`  Mark price: ${pos.mark_price}`);
+  console.log(`  Unrealized PnL: ${pos.unrealized_pnl}`);
+  console.log(`  Realized PnL: ${pos.realized_pnl}`);
+  console.log(`  Leverage: ${pos.leverage}x`);
+});
+```
+
+### Close Position
+
+```typescript
+async function closePosition(subAccountId: string, instrument: string) {
+  // Get current position
+  const positions = await tdg.positions({
+    sub_account_id: subAccountId,
+    instrument
+  });
+
+  const position = positions.result.find(p => p.instrument === instrument);
+  if (!position) {
+    console.log('No position found');
+    return;
+  }
+
+  const positionSize = parseFloat(position.size);
+  if (positionSize === 0) {
+    console.log('Position already closed');
+    return;
+  }
+
+  // Close with market order (opposite side)
+  const closeOrder = await tdg.createOrder({
+    sub_account_id: subAccountId,
+    instrument,
+    is_market: true,
+    size: (-positionSize).toString(), // Negative to close
+    time_in_force: 'IOC'
+  });
+
+  console.log('Position closed');
+  console.log('Close price:', closeOrder.result.metadata.avg_fill_price);
+  console.log('Realized PnL:', closeOrder.result.metadata.realized_pnl);
+}
+
+await closePosition('YOUR_SUB_ACCOUNT_ID', 'BTC_USDT_Perp');
+```
+
+### Manage Leverage
+
+```typescript
+// Get current leverage settings
+const leverageSettings = await tdg.getAllInitialLeverage({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID'
+});
+
+console.log('Current leverage settings:');
+leverageSettings.result.forEach(setting => {
+  console.log(`  ${setting.instrument}: ${setting.initial_leverage}x`);
+});
+
+// Set leverage for specific instrument
+const newLeverage = await tdg.setInitialLeverage({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  instrument: 'BTC_USDT_Perp',
+  initial_leverage: '10' // 10x leverage
+});
+
+console.log('New leverage set:', newLeverage.result.initial_leverage);
+```
+
+### Position Margin Configuration
+
+```typescript
+// Set position to isolated margin mode
+const marginConfig = await tdg.setPositionConfig({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  instrument: 'BTC_USDT_Perp',
+  margin_mode: 'ISOLATED',
+  initial_leverage: '5'
+});
+
+console.log('Margin mode updated:', marginConfig.result.margin_mode);
+
+// Add margin to isolated position
+const addedMargin = await tdg.addPositionMargin({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  instrument: 'BTC_USDT_Perp',
+  amount: '1000' // Add 1000 USDT
+});
+
+console.log('Margin added:', addedMargin.result.new_margin);
+```
+
+## Fill History
+
+```typescript
+// Get recent fills
+const fills = await tdg.fillHistory({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  instrument: 'BTC_USDT_Perp',
+  limit: 50
+});
+
+let totalFees = 0;
+let totalVolume = 0;
+
+fills.result.forEach(fill => {
+  console.log(`${fill.side} ${fill.size} @ ${fill.price}`);
+  console.log(`  Fee: ${fill.fee}`);
+  console.log(`  Time: ${new Date(fill.created_at)}`);
+  
+  totalFees += parseFloat(fill.fee);
+  totalVolume += parseFloat(fill.size) * parseFloat(fill.price);
+});
+
+console.log(`\nTotal fees: ${totalFees}`);
+console.log(`Total volume: ${totalVolume}`);
+```
+
+## Transfers
+
+### Transfer Between Sub-Accounts
+
+```typescript
+const transfer = await tdg.transfer({
+  from_account_id: 'ACCOUNT_1',
+  from_sub_account_id: 'SUB_ACCOUNT_1',
+  to_account_id: 'ACCOUNT_1',
+  to_sub_account_id: 'SUB_ACCOUNT_2',
+  currency: 'USDT',
+  amount: '1000'
+});
+
+console.log('Transfer ID:', transfer.result.transfer_id);
+console.log('Status:', transfer.result.status);
+
+// Get transfer history
+const transferHistory = await tdg.transferHistory({
+  sub_account_id: 'SUB_ACCOUNT_1',
+  from: (Date.now() - 30 * 24 * 60 * 60 * 1000).toString(),
+  to: Date.now().toString()
+});
+
+console.log(`${transferHistory.result.length} transfers in last 30 days`);
+```
+
+### Withdrawals
+
+```typescript
+// Request withdrawal
+const withdrawal = await tdg.withdrawal({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  currency: 'USDT',
+  amount: '500',
+  to_address: 'YOUR_WALLET_ADDRESS',
+  network: 'ERC20'
+});
+
+console.log('Withdrawal requested');
+
+// Check withdrawal history
+const withdrawalHistory = await tdg.withdrawalHistory({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  limit: 10
+});
+
+withdrawalHistory.result.forEach(w => {
+  console.log(`${w.amount} ${w.currency} - Status: ${w.status}`);
+});
+```
+
+## Funding Payments
+
+```typescript
+// Get funding payment history
+const fundingPayments = await tdg.fundingPaymentHistory({
+  sub_account_id: 'YOUR_SUB_ACCOUNT_ID',
+  instrument: 'BTC_USDT_Perp',
+  from: (Date.now() - 7 * 24 * 60 * 60 * 1000).toString(),
+  to: Date.now().toString()
+});
+
+let totalFundingPaid = 0;
+
+fundingPayments.result.forEach(payment => {
+  console.log(`${new Date(payment.timestamp)}:`);
+  console.log(`  Rate: ${payment.funding_rate}`);
+  console.log(`  Payment: ${payment.payment_amount}`);
+  
+  totalFundingPaid += parseFloat(payment.payment_amount);
+});
+
+console.log(`\nTotal funding paid (7 days): ${totalFundingPaid}`);
+```
+
+## Advanced Trading Strategies
+
+### Grid Trading Bot
+
+```typescript
+class GridTradingBot {
+  constructor(
+    private tdg: TDG,
+    private subAccountId: string,
+    private instrument: string,
+    private gridLevels: number,
+    private gridSpacing: number,
+    private orderSize: string
+  ) {}
+
+  async start(basePrice: number) {
+    console.log(`Starting grid bot at base price: ${basePrice}`);
+    
+    const orders = [];
+    
+    // Create buy orders below base price
+    for (let i = 1; i <= this.gridLevels; i++) {
+      const buyPrice = (basePrice * (1 - i * this.gridSpacing)).toFixed(2);
+      orders.push({
+        instrument: this.instrument,
+        is_market: false,
+        size: this.orderSize,
+        limit_price: buyPrice,
+        time_in_force: 'GTC'
+      });
+    }
+    
+    // Create sell orders above base price
+    for (let i = 1; i <= this.gridLevels; i++) {
+      const sellPrice = (basePrice * (1 + i * this.gridSpacing)).toFixed(2);
+      orders.push({
+        instrument: this.instrument,
+        is_market: false,
+        size: `-${this.orderSize}`,
+        limit_price: sellPrice,
+        time_in_force: 'GTC'
+      });
+    }
+    
+    const result = await this.tdg.createBulkOrders({
+      sub_account_id: this.subAccountId,
+      orders
+    });
+    
+    console.log(`Grid bot started with ${result.result.length} orders`);
+    return result.result;
+  }
+
+  async stop() {
+    await this.tdg.cancelAllOrders({
+      sub_account_id: this.subAccountId,
+      instrument: this.instrument
+    });
+    console.log('Grid bot stopped');
+  }
+}
+
+const gridBot = new GridTradingBot(
+  tdg,
+  'YOUR_SUB_ACCOUNT_ID',
+  'BTC_USDT_Perp',
+  5, // 5 levels on each side
+  0.01, // 1% spacing
+  '0.01' // 0.01 BTC per order
+);
+
+await gridBot.start(50000); // Start at $50,000
+```
+
+### TWAP Order Execution
+
+```typescript
+async function executeTWAP(
+  tdg: TDG,
+  subAccountId: string,
+  instrument: string,
+  totalSize: number,
+  durationMinutes: number,
+  numOrders: number
+) {
+  const sizePerOrder = totalSize / numOrders;
+  const intervalMs = (durationMinutes * 60 * 1000) / numOrders;
+  
+  console.log(`Executing TWAP: ${totalSize} over ${durationMinutes} minutes`);
+  console.log(`${numOrders} orders of ${sizePerOrder} each`);
+  
+  for (let i = 0; i < numOrders; i++) {
+    await new Promise(resolve => setTimeout(resolve, intervalMs));
+    
+    try {
+      const order = await tdg.createOrder({
+        sub_account_id: subAccountId,
+        instrument,
+        is_market: true,
+        size: sizePerOrder.toString(),
+        time_in_force: 'IOC'
+      });
+      
+      console.log(`Order ${i + 1}/${numOrders} filled @ ${order.result.metadata.avg_fill_price}`);
+    } catch (error) {
+      console.error(`Order ${i + 1} failed:`, error.message);
+    }
+  }
+  
+  console.log('TWAP execution complete');
+}
+
+await executeTWAP(
+  tdg,
+  'YOUR_SUB_ACCOUNT_ID',
+  'BTC_USDT_Perp',
+  1.0, // Buy 1 BTC
+  30, // Over 30 minutes
+  10 // Split into 10 orders
+);
+```

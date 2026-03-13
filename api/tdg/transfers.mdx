@@ -1,0 +1,182 @@
+---
+title: "Transfer Methods"
+description: "Handle deposits, withdrawals, and internal transfers"
+---
+
+## transfer
+
+Transfer funds between sub-accounts.
+
+```typescript
+transfer(payload: IApiTransferRequest, config?: AxiosRequestConfig): Promise<IApiTransferResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiTransferRequest" required>
+  The transfer request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiTransferResponse">
+  Transfer confirmation data
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#transfer)
+
+---
+
+## transferHistory
+
+Query transfer history.
+
+```typescript
+transferHistory(payload: IApiTransferHistoryRequest, config?: AxiosRequestConfig): Promise<IApiTransferHistoryResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiTransferHistoryRequest" required>
+  The transfer history query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiTransferHistoryResponse">
+  Transfer history data
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#transfer-history)
+
+---
+
+## withdrawal
+
+Withdraw funds from the exchange.
+
+```typescript
+withdrawal(payload: IApiWithdrawalRequest, config?: AxiosRequestConfig): Promise<IAckResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiWithdrawalRequest" required>
+  The withdrawal request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IAckResponse">
+  Acknowledgment response
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#withdrawal)
+
+---
+
+## withdrawalHistory
+
+Query withdrawal history.
+
+```typescript
+withdrawalHistory(payload: IApiWithdrawalHistoryRequest, config?: AxiosRequestConfig): Promise<IApiWithdrawalHistoryResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiWithdrawalHistoryRequest" required>
+  The withdrawal history query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiWithdrawalHistoryResponse">
+  Withdrawal history data
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#withdrawal-history)
+
+---
+
+## depositHistory
+
+Query deposit history.
+
+```typescript
+depositHistory(payload: IApiDepositHistoryRequest, config?: AxiosRequestConfig): Promise<IApiDepositHistoryResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiDepositHistoryRequest" required>
+  The deposit history query request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiDepositHistoryResponse">
+  Deposit history data
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#deposit-history)
+
+---
+
+## preDepositCheck
+
+Validate a deposit before submission.
+
+```typescript
+preDepositCheck(payload: IApiPreDepositCheckRequest, config?: AxiosRequestConfig): Promise<IApiPreDepositCheckResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiPreDepositCheckRequest" required>
+  The pre-deposit check request
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Returns
+
+<ResponseField name="response" type="IApiPreDepositCheckResponse">
+  Validation results
+</ResponseField>
+
+### Reference
+
+[API Documentation](https://api-docs.grvt.io/trading_api/#predepositcheck)

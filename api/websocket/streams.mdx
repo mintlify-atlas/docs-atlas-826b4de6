@@ -1,0 +1,431 @@
+---
+title: WebSocket Streams
+description: Available WebSocket streams and subscription patterns
+---
+
+The SDK supports a variety of real-time data streams for market data and trading updates.
+
+## Subscription Methods
+
+### subscribe()
+
+Subscribe to a single stream.
+
+```typescript
+const key = ws.subscribe(options: TWSRequest): string
+```
+
+**Returns:** `string` - Subscription key for later unsubscription
+
+### subscribes()
+
+Subscribe to multiple streams in a single request.
+
+```typescript
+const keys = ws.subscribes(...subscriptions: TWSRequest[]): string[]
+```
+
+**Returns:** `string[]` - Array of subscription keys
+
+**Example:**
+
+```typescript
+const [tradeKey, tickerKey] = ws.subscribes(
+  {
+    stream: 'trade',
+    params: { instrument: 'BTC_USDT_Perp', limit: 100 },
+    onData: (trades) => console.log(trades)
+  },
+  {
+    stream: 'ticker.s',
+    params: { instrument: 'ETH_USDT_Perp', rate: 1000 },
+    onData: (ticker) => console.log(ticker)
+  }
+)
+```
+
+### unsubscribe()
+
+Unsubscribe from one or more streams.
+
+```typescript
+ws.unsubscribe(...keys: string[])
+```
+
+## Market Data Streams
+
+### Candlestick Stream
+
+OHLCV candlestick data at various intervals.
+
+```typescript
+ws.subscribe({
+  stream: 'candle',
+  params: {
+    instrument: 'BTC_USDT_Perp',
+    interval: 'CI_1_M',
+    type: 'TRADE'
+  },
+  onData: (candle) => {
+    console.log('New candle:', candle)
+  }
+})
+```
+
+<ParamField path="params.instrument" type="string" required>
+  Instrument identifier (e.g., `BTC_USDT_Perp`, `ETH_USDT_Call_20Oct23_2800`)
+</ParamField>
+
+<ParamField path="params.interval" type="ECandlestickInterval" required>
+  Candlestick interval: `CI_1_M`, `CI_5_M`, `CI_15_M`, `CI_1_H`, `CI_4_H`, `CI_1_D`, etc.
+</ParamField>
+
+<ParamField path="params.type" type="ECandlestickType" required>
+  Price type: `TRADE`, `MARK`, `INDEX`, or `MID`
+</ParamField>
+
+### Trade Stream
+
+Public trade feed for an instrument.
+
+```typescript
+ws.subscribe({
+  stream: 'trade',
+  params: {
+    instrument: 'BTC_USDT_Perp',
+    limit: 500
+  },
+  onData: (trades) => {
+    console.log('Public trades:', trades)
+  }
+})
+```
+
+<ParamField path="params.instrument" type="string" required>
+  Instrument identifier
+</ParamField>
+
+<ParamField path="params.limit" type="number">
+  Maximum number of trades per update (default: 500)
+</ParamField>
+
+### Mini Ticker Stream
+
+Lightweight market statistics.
+
+```typescript
+ws.subscribe({
+  stream: 'mini.d', // or 'mini.s' for snapshot
+  params: {
+    instrument: 'BTC_USDT_Perp',
+    rate: 1000
+  },
+  onData: (ticker) => {
+    console.log('Mini ticker:', ticker)
+  }
+})
+```
+
+<ParamField path="params.instrument" type="string" required>
+  Instrument identifier
+</ParamField>
+
+<ParamField path="params.rate" type="number">
+  Minimum publishing rate in milliseconds (default: 1000)
+</ParamField>
+
+### Ticker Stream
+
+Full market statistics including 24h data.
+
+```typescript
+ws.subscribe({
+  stream: 'ticker.d', // or 'ticker.s' for snapshot
+  params: {
+    instrument: 'ETH_USDT_Perp',
+    rate: 1000
+  },
+  onData: (ticker) => {
+    console.log('Full ticker:', ticker)
+  }
+})
+```
+
+<ParamField path="params.instrument" type="string" required>
+  Instrument identifier
+</ParamField>
+
+<ParamField path="params.rate" type="number">
+  Minimum publishing rate in milliseconds (default: 1000)
+</ParamField>
+
+### Orderbook Stream
+
+Aggregated orderbook levels.
+
+```typescript
+ws.subscribe({
+  stream: 'rpi.book.d', // or 'rpi.book.s' for snapshot
+  params: {
+    instrument: 'BTC_USDT_Perp',
+    rate: 1000,
+    depth: 10
+  },
+  onData: (levels) => {
+    console.log('Orderbook levels:', levels)
+  }
+})
+```
+
+<ParamField path="params.instrument" type="string" required>
+  Instrument identifier
+</ParamField>
+
+<ParamField path="params.rate" type="number">
+  Minimum publishing rate in milliseconds (default: 1000)
+</ParamField>
+
+<ParamField path="params.depth" type="number">
+  Number of price levels per side (default: 10, snapshot mode only)
+</ParamField>
+
+## Trading Data Streams
+
+### Order Stream
+
+Order updates for your account.
+
+```typescript
+ws.subscribe({
+  stream: 'order',
+  params: {
+    sub_account_id: '2345123',
+    instrument: 'BTC_USDT_Perp' // optional, omit for all instruments
+  },
+  onData: (order) => {
+    console.log('Order update:', order)
+  }
+})
+```
+
+<ParamField path="params.sub_account_id" type="string" required>
+  Sub-account ID to monitor
+</ParamField>
+
+<ParamField path="params.instrument" type="string">
+  Instrument filter (omit for all instruments)
+</ParamField>
+
+### Order State Stream
+
+Lightweight order state changes (higher throughput than order stream).
+
+```typescript
+ws.subscribe({
+  stream: 'state',
+  params: {
+    sub_account_id: '2345123',
+    instrument: 'BTC_USDT_Perp'
+  },
+  onData: (state) => {
+    console.log('Order state:', state)
+  }
+})
+```
+
+<ParamField path="params.sub_account_id" type="string" required>
+  Sub-account ID to monitor
+</ParamField>
+
+<ParamField path="params.instrument" type="string">
+  Instrument filter (omit for all instruments)
+</ParamField>
+
+### Order Group Stream
+
+Notifications when new order groups are created.
+
+```typescript
+ws.subscribe({
+  stream: 'group',
+  params: {
+    sub_account_id: '2345123'
+  },
+  onData: (group) => {
+    console.log('Order group:', group)
+  }
+})
+```
+
+<ParamField path="params.sub_account_id" type="string" required>
+  Sub-account ID to monitor
+</ParamField>
+
+### Position Stream
+
+Position updates for your account.
+
+```typescript
+ws.subscribe({
+  stream: 'position',
+  params: {
+    sub_account_id: '2345123',
+    instrument: 'BTC_USDT_Perp'
+  },
+  onData: (position) => {
+    console.log('Position update:', position)
+  }
+})
+```
+
+<ParamField path="params.sub_account_id" type="string" required>
+  Sub-account ID to monitor
+</ParamField>
+
+<ParamField path="params.instrument" type="string">
+  Instrument filter (omit for all instruments)
+</ParamField>
+
+### Fill Stream
+
+Private trade executions.
+
+```typescript
+ws.subscribe({
+  stream: 'fill',
+  params: {
+    sub_account_id: '2345123',
+    instrument: 'BTC_USDT_Perp'
+  },
+  onData: (fill) => {
+    console.log('Fill:', fill)
+  }
+})
+```
+
+<ParamField path="params.sub_account_id" type="string" required>
+  Sub-account ID to monitor
+</ParamField>
+
+<ParamField path="params.instrument" type="string">
+  Instrument filter (omit for all instruments)
+</ParamField>
+
+### Deposit Stream
+
+Deposit notifications.
+
+```typescript
+ws.subscribe({
+  stream: 'deposit',
+  params: {
+    main_account_id: '0x9fe3758b67ce7a2875ee4b452f01a5282d84ed8a'
+  },
+  onData: (deposit) => {
+    console.log('Deposit:', deposit)
+  }
+})
+```
+
+<ParamField path="params.main_account_id" type="string" required>
+  Main account ID to monitor
+</ParamField>
+
+### Transfer Stream
+
+Internal transfer updates.
+
+```typescript
+ws.subscribe({
+  stream: 'transfer',
+  params: {
+    main_account_id: '0x9fe3758b67ce7a2875ee4b452f01a5282d84ed8a',
+    sub_account_id: '2345123' // optional
+  },
+  onData: (transfer) => {
+    console.log('Transfer:', transfer)
+  }
+})
+```
+
+<ParamField path="params.main_account_id" type="string" required>
+  Main account ID to monitor
+</ParamField>
+
+<ParamField path="params.sub_account_id" type="string">
+  Sub-account ID filter (optional)
+</ParamField>
+
+### Withdrawal Stream
+
+Withdrawal notifications.
+
+```typescript
+ws.subscribe({
+  stream: 'withdrawal',
+  params: {
+    main_account_id: '0x9fe3758b67ce7a2875ee4b452f01a5282d84ed8a'
+  },
+  onData: (withdrawal) => {
+    console.log('Withdrawal:', withdrawal)
+  }
+})
+```
+
+<ParamField path="params.main_account_id" type="string" required>
+  Main account ID to monitor
+</ParamField>
+
+## Stream Enum
+
+```typescript
+enum EStream {
+  CANDLE = 'candle',
+  MINI_DELTA = 'mini.d',
+  MINI_SNAP = 'mini.s',
+  RPI_BOOK_DELTA = 'rpi.book.d',
+  RPI_BOOK_SNAP = 'rpi.book.s',
+  TICKER_DELTA = 'ticker.d',
+  TICKER_SNAP = 'ticker.s',
+  TRADE = 'trade',
+  GROUP = 'group',
+  ORDER = 'order',
+  STATE = 'state',
+  POSITION = 'position',
+  FILL = 'fill',
+  DEPOSIT = 'deposit',
+  TRANSFER = 'transfer',
+  WITHDRAWAL = 'withdrawal'
+}
+```
+
+## Type Definitions
+
+### TWSRequest
+
+Union type of all stream request types:
+
+```typescript
+type TWSRequest =
+  | IWSCandleRequest
+  | IWSBookRequest
+  | IWSMiniRequest
+  | IWSTickerRequest
+  | IWSTradeRequest
+  | IWSTdgOrderGroupRequest
+  | IWSTdgOrderRequest
+  | IWSTdgOrderStateRequest
+  | IWSTdgPositionRequest
+  | IWSTdgFillRequest
+  | IWSTdgDepositRequest
+  | IWSTdgTransferRequest
+  | IWSTdgWithDrawalRequest
+```
+
+### TMessageHandler
+
+Callback function for stream data:
+
+```typescript
+type TMessageHandler<T> = (data: T) => void
+```

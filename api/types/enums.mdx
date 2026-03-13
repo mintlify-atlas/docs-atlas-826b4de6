@@ -1,0 +1,393 @@
+---
+title: Enums
+description: Enumeration types used throughout the SDK
+---
+
+Enumeration types that define valid values for various SDK operations.
+
+## Asset & Instrument Enums
+
+### EKind
+
+Asset kinds supported on the GRVT exchange.
+
+```typescript
+enum EKind {
+  PERPETUAL = 'PERPETUAL',
+  FUTURE = 'FUTURE',
+  CALL = 'CALL',
+  PUT = 'PUT'
+}
+```
+
+<ParamField path="PERPETUAL" type="string">
+  Perpetual futures contract
+</ParamField>
+
+<ParamField path="FUTURE" type="string">
+  Dated futures contract
+</ParamField>
+
+<ParamField path="CALL" type="string">
+  Call option contract
+</ParamField>
+
+<ParamField path="PUT" type="string">
+  Put option contract
+</ParamField>
+
+**Integer Mapping:**
+
+```typescript
+const EKindInt: Record<EKind, number> = {
+  [EKind.PERPETUAL]: 1,
+  [EKind.FUTURE]: 2,
+  [EKind.CALL]: 3,
+  [EKind.PUT]: 4
+}
+```
+
+### EVenue
+
+Trading venues supported on the GRVT exchange.
+
+```typescript
+enum EVenue {
+  ORDERBOOK = 'ORDERBOOK',
+  RFQ = 'RFQ'
+}
+```
+
+<ParamField path="ORDERBOOK" type="string">
+  Trade cleared on the orderbook venue
+</ParamField>
+
+<ParamField path="RFQ" type="string">
+  Trade cleared on the Request For Quote (RFQ) venue
+</ParamField>
+
+## Candlestick Enums
+
+### ECandlestickInterval
+
+Candlestick time intervals.
+
+```typescript
+enum ECandlestickInterval {
+  CI_1_M = 'CI_1_M',    // 1 minute
+  CI_3_M = 'CI_3_M',    // 3 minutes
+  CI_5_M = 'CI_5_M',    // 5 minutes
+  CI_15_M = 'CI_15_M',  // 15 minutes
+  CI_30_M = 'CI_30_M',  // 30 minutes
+  CI_1_H = 'CI_1_H',    // 1 hour
+  CI_2_H = 'CI_2_H',    // 2 hours
+  CI_4_H = 'CI_4_H',    // 4 hours
+  CI_6_H = 'CI_6_H',    // 6 hours
+  CI_8_H = 'CI_8_H',    // 8 hours
+  CI_12_H = 'CI_12_H',  // 12 hours
+  CI_1_D = 'CI_1_D',    // 1 day
+  CI_3_D = 'CI_3_D',    // 3 days
+  CI_5_D = 'CI_5_D',    // 5 days
+  CI_1_W = 'CI_1_W',    // 1 week
+  CI_2_W = 'CI_2_W',    // 2 weeks
+  CI_3_W = 'CI_3_W',    // 3 weeks
+  CI_4_W = 'CI_4_W'     // 4 weeks
+}
+```
+
+**Usage:**
+
+```typescript
+ws.subscribe({
+  stream: 'candle',
+  params: {
+    instrument: 'BTC_USDT_Perp',
+    interval: ECandlestickInterval.CI_1_H,
+    type: 'TRADE'
+  },
+  onData: (candle) => console.log(candle)
+})
+```
+
+### ECandlestickType
+
+Price types for candlestick data.
+
+```typescript
+enum ECandlestickType {
+  TRADE = 'TRADE',  // Tracks traded prices
+  MARK = 'MARK',    // Tracks mark prices
+  INDEX = 'INDEX',  // Tracks index prices
+  MID = 'MID'       // Tracks book mid prices
+}
+```
+
+<ParamField path="TRADE" type="string">
+  Candlesticks based on actual trade prices
+</ParamField>
+
+<ParamField path="MARK" type="string">
+  Candlesticks based on mark prices (used for funding)
+</ParamField>
+
+<ParamField path="INDEX" type="string">
+  Candlesticks based on index prices
+</ParamField>
+
+<ParamField path="MID" type="string">
+  Candlesticks based on orderbook mid prices
+</ParamField>
+
+## Order Enums
+
+### EOrderStatus
+
+Order lifecycle states.
+
+```typescript
+enum EOrderStatus {
+  PENDING = 'PENDING',
+  OPEN = 'OPEN',
+  FILLED = 'FILLED',
+  REJECTED = 'REJECTED',
+  CANCELLED = 'CANCELLED'
+}
+```
+
+<ParamField path="PENDING" type="string">
+  Order sent to matching engine, pending transition to open/filled/rejected
+</ParamField>
+
+<ParamField path="OPEN" type="string">
+  Order actively matching on the matching engine (unfilled or partially filled)
+</ParamField>
+
+<ParamField path="FILLED" type="string">
+  Order fully filled and closed. Taker orders can transition directly from PENDING to FILLED.
+</ParamField>
+
+<ParamField path="REJECTED" type="string">
+  Order rejected by matching engine. Once open, an order cannot be rejected.
+</ParamField>
+
+<ParamField path="CANCELLED" type="string">
+  Order cancelled by user. Before an order is open, it cannot be cancelled.
+</ParamField>
+
+### EOrderRejectReason
+
+Reasons for order rejection or cancellation.
+
+```typescript
+enum EOrderRejectReason {
+  UNSPECIFIED = 'UNSPECIFIED',
+  CLIENT_CANCEL = 'CLIENT_CANCEL',
+  CLIENT_BULK_CANCEL = 'CLIENT_BULK_CANCEL',
+  CLIENT_SESSION_END = 'CLIENT_SESSION_END',
+  MARKET_CANCEL = 'MARKET_CANCEL',
+  IOC_CANCEL = 'IOC_CANCEL',
+  AON_CANCEL = 'AON_CANCEL',
+  FOK_CANCEL = 'FOK_CANCEL',
+  EXPIRED = 'EXPIRED',
+  FAIL_POST_ONLY = 'FAIL_POST_ONLY',
+  FAIL_REDUCE_ONLY = 'FAIL_REDUCE_ONLY',
+  MM_PROTECTION = 'MM_PROTECTION',
+  SELF_TRADE_PROTECTION = 'SELF_TRADE_PROTECTION',
+  SELF_MATCHED_SUBACCOUNT = 'SELF_MATCHED_SUBACCOUNT',
+  OVERLAPPING_CLIENT_ORDER_ID = 'OVERLAPPING_CLIENT_ORDER_ID',
+  BELOW_MARGIN = 'BELOW_MARGIN',
+  LIQUIDATION = 'LIQUIDATION',
+  INSTRUMENT_INVALID = 'INSTRUMENT_INVALID',
+  INSTRUMENT_DEACTIVATED = 'INSTRUMENT_DEACTIVATED',
+  SYSTEM_FAILOVER = 'SYSTEM_FAILOVER',
+  UNAUTHORISED = 'UNAUTHORISED',
+  SESSION_KEY_EXPIRED = 'SESSION_KEY_EXPIRED',
+  SUB_ACCOUNT_NOT_FOUND = 'SUB_ACCOUNT_NOT_FOUND',
+  NO_TRADE_PERMISSION = 'NO_TRADE_PERMISSION',
+  UNSUPPORTED_TIME_IN_FORCE = 'UNSUPPORTED_TIME_IN_FORCE',
+  MULTI_LEGGED_ORDER = 'MULTI_LEGGED_ORDER',
+  EXCEED_MAX_POSITION_SIZE = 'EXCEED_MAX_POSITION_SIZE',
+  EXCEED_MAX_SIGNATURE_EXPIRATION = 'EXCEED_MAX_SIGNATURE_EXPIRATION',
+  MARKET_ORDER_WITH_LIMIT_PRICE = 'MARKET_ORDER_WITH_LIMIT_PRICE',
+  CLIENT_CANCEL_ON_DISCONNECT_TRIGGERED = 'CLIENT_CANCEL_ON_DISCONNECT_TRIGGERED',
+  OCO_COUNTER_PART_TRIGGERED = 'OCO_COUNTER_PART_TRIGGERED',
+  REDUCE_ONLY_LIMIT = 'REDUCE_ONLY_LIMIT',
+  CLIENT_REPLACE = 'CLIENT_REPLACE',
+  DERISK_MUST_BE_IOC = 'DERISK_MUST_BE_IOC',
+  DERISK_MUST_BE_REDUCE_ONLY = 'DERISK_MUST_BE_REDUCE_ONLY',
+  DERISK_NOT_SUPPORTED = 'DERISK_NOT_SUPPORTED',
+  INVALID_ORDER_TYPE = 'INVALID_ORDER_TYPE',
+  CURRENCY_NOT_DEFINED = 'CURRENCY_NOT_DEFINED',
+  INVALID_CHAIN_ID = 'INVALID_CHAIN_ID',
+  BUILDER_ORDER_FEE_EXCEED = 'BUILDER_ORDER_FEE_EXCEED',
+  BUILDER_ORDER_FEE_NEGATIVE = 'BUILDER_ORDER_FEE_NEGATIVE',
+  BUILDER_ORDER_BUILDER_NOT_AUTHORIZED = 'BUILDER_ORDER_BUILDER_NOT_AUTHORIZED',
+  BUILDER_ORDER_BUILDER_NOT_EXIST = 'BUILDER_ORDER_BUILDER_NOT_EXIST',
+  TRADE_PRICE_WORSE_THAN_BANKRUPTCY_PRICE = 'TRADE_PRICE_WORSE_THAN_BANKRUPTCY_PRICE',
+  TOO_MANY_MAKER_ORDERS = 'TOO_MANY_MAKER_ORDERS'
+}
+```
+
+**Common Reasons:**
+
+<ParamField path="CLIENT_CANCEL" type="string">
+  Client called a Cancel API
+</ParamField>
+
+<ParamField path="IOC_CANCEL" type="string">
+  IOC order cancelled after no/partial fill
+</ParamField>
+
+<ParamField path="FOK_CANCEL" type="string">
+  FOK order cancelled as it could not be fully matched
+</ParamField>
+
+<ParamField path="EXPIRED" type="string">
+  Order cancelled as it has expired
+</ParamField>
+
+<ParamField path="FAIL_POST_ONLY" type="string">
+  Post-only order could not be posted into orderbook
+</ParamField>
+
+<ParamField path="BELOW_MARGIN" type="string">
+  Order would bring sub-account below initial margin requirement
+</ParamField>
+
+<ParamField path="LIQUIDATION" type="string">
+  Sub-account liquidated (all open orders cancelled)
+</ParamField>
+
+### ETimeInForce
+
+Order time-in-force options.
+
+```typescript
+enum ETimeInForce {
+  GOOD_TILL_TIME = 'GOOD_TILL_TIME',
+  ALL_OR_NONE = 'ALL_OR_NONE',
+  IMMEDIATE_OR_CANCEL = 'IMMEDIATE_OR_CANCEL',
+  FILL_OR_KILL = 'FILL_OR_KILL',
+  RETAIL_PRICE_IMPROVEMENT = 'RETAIL_PRICE_IMPROVEMENT'
+}
+```
+
+<ParamField path="GOOD_TILL_TIME" type="string">
+  GTT - Remains open until cancelled or expired
+</ParamField>
+
+<ParamField path="ALL_OR_NONE" type="string">
+  AON - Fill the whole order or none of it (Block Trades Only)
+</ParamField>
+
+<ParamField path="IMMEDIATE_OR_CANCEL" type="string">
+  IOC - Fill as much as possible when hitting orderbook, then cancel
+</ParamField>
+
+<ParamField path="FILL_OR_KILL" type="string">
+  FOK - Both AON and IOC. Fill fully or cancel immediately.
+</ParamField>
+
+<ParamField path="RETAIL_PRICE_IMPROVEMENT" type="string">
+  RPI - GTT + PostOnly maker order, only takeable by non-algorithmic UI users
+</ParamField>
+
+**Matrix:**
+
+|                       | Must Fill All | Can Fill Partial |
+| --------------------- | ------------- | ---------------- |
+| Must Fill Immediately | FOK           | IOC              |
+| Can Fill Till Time    | AON           | GTT              |
+
+## Stream Enum
+
+### EStream
+
+WebSocket stream identifiers.
+
+```typescript
+enum EStream {
+  // Market Data
+  CANDLE = 'candle',
+  MINI_DELTA = 'mini.d',
+  MINI_SNAP = 'mini.s',
+  RPI_BOOK_DELTA = 'rpi.book.d',
+  RPI_BOOK_SNAP = 'rpi.book.s',
+  TICKER_DELTA = 'ticker.d',
+  TICKER_SNAP = 'ticker.s',
+  TRADE = 'trade',
+  
+  // Trading Data
+  GROUP = 'group',
+  ORDER = 'order',
+  STATE = 'state',
+  POSITION = 'position',
+  FILL = 'fill',
+  DEPOSIT = 'deposit',
+  TRANSFER = 'transfer',
+  WITHDRAWAL = 'withdrawal',
+  
+  // Deprecated (use RPI_BOOK variants)
+  ORDERBOOK_DELTA = 'book.d',
+  ORDERBOOK_SNAP = 'book.s'
+}
+```
+
+**Usage:**
+
+```typescript
+import { EStream } from '@grvt/sdk'
+
+ws.subscribe({
+  stream: EStream.TICKER_DELTA,
+  params: { instrument: 'BTC_USDT_Perp', rate: 1000 },
+  onData: (ticker) => console.log(ticker)
+})
+```
+
+## Usage Examples
+
+### Type-Safe Stream Subscriptions
+
+```typescript
+import { ECandlestickInterval, ECandlestickType, EStream } from '@grvt/sdk'
+
+ws.subscribe({
+  stream: EStream.CANDLE,
+  params: {
+    instrument: 'BTC_USDT_Perp',
+    interval: ECandlestickInterval.CI_1_H,
+    type: ECandlestickType.TRADE
+  },
+  onData: (candle) => {
+    console.log(`${candle.open} ${candle.high} ${candle.low} ${candle.close}`)
+  }
+})
+```
+
+### Order Status Checking
+
+```typescript
+import { EOrderStatus, EOrderRejectReason } from '@grvt/sdk'
+
+ws.subscribe({
+  stream: 'order',
+  params: { sub_account_id: 'abc123' },
+  onData: (order) => {
+    switch (order.status) {
+      case EOrderStatus.FILLED:
+        console.log('Order filled!')
+        break
+      case EOrderStatus.REJECTED:
+        console.error('Order rejected:', order.reject_reason)
+        if (order.reject_reason === EOrderRejectReason.BELOW_MARGIN) {
+          console.error('Insufficient margin')
+        }
+        break
+      case EOrderStatus.CANCELLED:
+        console.log('Order cancelled')
+        break
+    }
+  }
+})
+```

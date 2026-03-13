@@ -1,0 +1,491 @@
+---
+title: Vault Data Methods
+description: Retrieve vault metrics, performance, and historical data
+---
+
+Vault data methods provide access to vault performance metrics, risk data, positions, and historical information for vaults on the Gravity platform.
+
+## vaultAssetExposure
+
+Get vault asset exposure over a specified time period.
+
+```typescript
+vaultAssetExposure(payload: IApiTimedVaultAssetExposureRequest, config?: AxiosRequestConfig): Promise<IApiTimedAssetExposureResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiTimedVaultAssetExposureRequest" required>
+  <Expandable title="properties">
+    <ParamField path="vault_id" type="string" required>
+      The vault ID to query
+    </ParamField>
+    
+    <ParamField path="start_time" type="string">
+      Start time in unix nanoseconds
+    </ParamField>
+    
+    <ParamField path="end_time" type="string">
+      End time in unix nanoseconds
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiTimedAssetExposureResponse">
+  Contains vault asset exposure data over time
+</ResponseField>
+
+### Example
+
+```typescript
+const exposure = await mdg.vaultAssetExposure({
+  vault_id: 'vault_123',
+  start_time: '1634000000000000000',
+  end_time: '1634086400000000000'
+});
+
+console.log('Asset exposure:', exposure.result);
+```
+
+---
+
+## snapVaultPosition
+
+Get a snapshot of current vault positions.
+
+```typescript
+snapVaultPosition(payload: IApiQuerySnapVaultPositionRequest, config?: AxiosRequestConfig): Promise<IApiQuerySnapVaultPositionResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiQuerySnapVaultPositionRequest" required>
+  <Expandable title="properties">
+    <ParamField path="vault_id" type="string" required>
+      The vault ID to query
+    </ParamField>
+    
+    <ParamField path="timestamp" type="string">
+      Timestamp for the snapshot in unix nanoseconds
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiQuerySnapVaultPositionResponse">
+  Contains the vault position snapshot
+</ResponseField>
+
+### Example
+
+```typescript
+const position = await mdg.snapVaultPosition({
+  vault_id: 'vault_123'
+});
+
+console.log('Current positions:', position.result);
+```
+
+---
+
+## vaultDetail
+
+Get detailed information for one or more vaults.
+
+```typescript
+vaultDetail(payload: IApiBatchQueryVaultDetailRequest, config?: AxiosRequestConfig): Promise<IApiBatchQueryVaultDetailResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiBatchQueryVaultDetailRequest" required>
+  <Expandable title="properties">
+    <ParamField path="vault_i_ds" type="string[]" required>
+      Array of vault IDs to fetch details for
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiBatchQueryVaultDetailResponse">
+  <Expandable title="properties">
+    <ResponseField name="result" type="IApiVaultDetail[]">
+      Array of vault details matching the requested vault IDs
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```typescript
+const details = await mdg.vaultDetail({
+  vault_i_ds: ['vault_123', 'vault_456']
+});
+
+details.result.forEach(vault => {
+  console.log(`Vault ${vault.vault_id}: ${vault.name}`);
+});
+```
+
+---
+
+## vaultPerformance
+
+Get performance metrics for one or more vaults.
+
+```typescript
+vaultPerformance(payload: IApiBatchQueryVaultPerformanceRequest, config?: AxiosRequestConfig): Promise<IApiBatchQueryVaultPerformanceResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiBatchQueryVaultPerformanceRequest" required>
+  <Expandable title="properties">
+    <ParamField path="vault_i_ds" type="string[]" required>
+      Array of vault IDs to fetch performance for
+    </ParamField>
+    
+    <ParamField path="use_annualized_returns" type="boolean">
+      Whether to use annualized yield for the returns (default: false)
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiBatchQueryVaultPerformanceResponse">
+  <Expandable title="properties">
+    <ResponseField name="result" type="IApiVaultPerformance[]">
+      Array of vault performance metrics
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```typescript
+const performance = await mdg.vaultPerformance({
+  vault_i_ds: ['vault_123', 'vault_456'],
+  use_annualized_returns: true
+});
+
+performance.result.forEach(vault => {
+  console.log(`Vault ${vault.vault_id} annualized return: ${vault.annualized_return}`);
+});
+```
+
+---
+
+## vaultPerformanceTrend
+
+Get performance trend data for a vault over time.
+
+```typescript
+vaultPerformanceTrend(payload: IApiQueryVaultPerformanceTrendRequest, config?: AxiosRequestConfig): Promise<IApiQueryVaultPerformanceTrendResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiQueryVaultPerformanceTrendRequest" required>
+  <Expandable title="properties">
+    <ParamField path="vault_id" type="string" required>
+      The vault ID to query
+    </ParamField>
+    
+    <ParamField path="start_time" type="string">
+      Start time in unix nanoseconds
+    </ParamField>
+    
+    <ParamField path="end_time" type="string">
+      End time in unix nanoseconds
+    </ParamField>
+    
+    <ParamField path="interval" type="ETimeInterval">
+      Time interval for trend data points
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiQueryVaultPerformanceTrendResponse">
+  Contains vault performance trend data points over the specified time period
+</ResponseField>
+
+### Example
+
+```typescript
+const trend = await mdg.vaultPerformanceTrend({
+  vault_id: 'vault_123',
+  start_time: '1634000000000000000',
+  end_time: '1634086400000000000',
+  interval: 'HOUR'
+});
+
+console.log('Performance trend:', trend.result);
+```
+
+---
+
+## vaultRiskMetric
+
+Get risk metrics for one or more vaults.
+
+```typescript
+vaultRiskMetric(payload: IApiBatchQueryVaultRiskMetricRequest, config?: AxiosRequestConfig): Promise<IApiBatchQueryVaultRiskMetricResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiBatchQueryVaultRiskMetricRequest" required>
+  <Expandable title="properties">
+    <ParamField path="vault_i_ds" type="string[]" required>
+      Array of vault IDs to fetch risk metrics for
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiBatchQueryVaultRiskMetricResponse">
+  <Expandable title="properties">
+    <ResponseField name="result" type="IVaultRiskMetric[]">
+      Array of vault risk metrics
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```typescript
+const riskMetrics = await mdg.vaultRiskMetric({
+  vault_i_ds: ['vault_123', 'vault_456']
+});
+
+riskMetrics.result.forEach(vault => {
+  console.log(`Vault ${vault.vault_id} risk metrics:`, vault);
+});
+```
+
+---
+
+## vaultSummaryHistory
+
+Get historical summary data for a vault.
+
+```typescript
+vaultSummaryHistory(payload: IApiQueryVaultSummaryHistoryRequest, config?: AxiosRequestConfig): Promise<IApiQueryVaultSummaryHistoryResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiQueryVaultSummaryHistoryRequest" required>
+  <Expandable title="properties">
+    <ParamField path="vault_id" type="string" required>
+      The vault ID to query
+    </ParamField>
+    
+    <ParamField path="start_time" type="string">
+      Start time in unix nanoseconds
+    </ParamField>
+    
+    <ParamField path="end_time" type="string">
+      End time in unix nanoseconds
+    </ParamField>
+    
+    <ParamField path="limit" type="number">
+      Maximum number of records to return
+    </ParamField>
+    
+    <ParamField path="cursor" type="string">
+      Pagination cursor
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiQueryVaultSummaryHistoryResponse">
+  <Expandable title="properties">
+    <ResponseField name="result" type="VaultSummary[]">
+      Array of historical vault summaries
+    </ResponseField>
+    
+    <ResponseField name="next" type="string">
+      Pagination cursor for the next page
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```typescript
+const history = await mdg.vaultSummaryHistory({
+  vault_id: 'vault_123',
+  limit: 100
+});
+
+console.log(`Retrieved ${history.result.length} historical summaries`);
+
+// Fetch next page if available
+if (history.next) {
+  const nextPage = await mdg.vaultSummaryHistory({
+    vault_id: 'vault_123',
+    cursor: history.next
+  });
+}
+```
+
+---
+
+## vaultSubAccountSummaryHistory
+
+Get historical summary data for vault sub-accounts.
+
+```typescript
+vaultSubAccountSummaryHistory(payload: IApiQueryListVaultSubAccountSummaryRequest, config?: AxiosRequestConfig): Promise<IApiQueryListVaultSubAccountSummaryResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiQueryListVaultSubAccountSummaryRequest" required>
+  <Expandable title="properties">
+    <ParamField path="vault_id" type="string" required>
+      The vault ID to query
+    </ParamField>
+    
+    <ParamField path="start_time" type="string">
+      Start time in unix nanoseconds
+    </ParamField>
+    
+    <ParamField path="end_time" type="string">
+      End time in unix nanoseconds
+    </ParamField>
+    
+    <ParamField path="limit" type="number">
+      Maximum number of records to return
+    </ParamField>
+    
+    <ParamField path="cursor" type="string">
+      Pagination cursor
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiQueryListVaultSubAccountSummaryResponse">
+  <Expandable title="properties">
+    <ResponseField name="result" type="VaultSubAccountSummary[]">
+      Array of historical vault sub-account summaries
+    </ResponseField>
+    
+    <ResponseField name="next" type="string">
+      Pagination cursor for the next page
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```typescript
+const subAccountHistory = await mdg.vaultSubAccountSummaryHistory({
+  vault_id: 'vault_123',
+  start_time: '1634000000000000000',
+  end_time: '1634086400000000000',
+  limit: 50
+});
+
+console.log(`Retrieved ${subAccountHistory.result.length} sub-account summaries`);
+```
+
+---
+
+## Common Use Cases
+
+### Monitor vault performance
+
+```typescript
+// Get current performance metrics
+const performance = await mdg.vaultPerformance({
+  vault_i_ds: ['vault_123'],
+  use_annualized_returns: true
+});
+
+// Get performance trend over the last 30 days
+const thirtyDaysAgo = String(Date.now() * 1000000 - 30 * 24 * 60 * 60 * 1000000000);
+const now = String(Date.now() * 1000000);
+
+const trend = await mdg.vaultPerformanceTrend({
+  vault_id: 'vault_123',
+  start_time: thirtyDaysAgo,
+  end_time: now,
+  interval: 'DAY'
+});
+```
+
+### Analyze vault risk
+
+```typescript
+// Get risk metrics for multiple vaults
+const riskData = await mdg.vaultRiskMetric({
+  vault_i_ds: ['vault_123', 'vault_456', 'vault_789']
+});
+
+// Sort by risk level
+const sortedByRisk = riskData.result.sort((a, b) => 
+  parseFloat(a.risk_score) - parseFloat(b.risk_score)
+);
+```
+
+### Track vault positions
+
+```typescript
+// Get current position snapshot
+const currentPosition = await mdg.snapVaultPosition({
+  vault_id: 'vault_123'
+});
+
+// Get asset exposure over time
+const exposure = await mdg.vaultAssetExposure({
+  vault_id: 'vault_123',
+  start_time: thirtyDaysAgo,
+  end_time: now
+});
+```

@@ -1,97 +1,167 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "GRVT JavaScript Client"
+description: "Node.js & JavaScript SDK for GRVT REST APIs & WebSockets"
 ---
 
-## Setting up
+<div style={{
+  background: 'linear-gradient(135deg, #020627 0%, #11161e 100%)',
+  borderRadius: '12px',
+  padding: '48px 32px',
+  marginBottom: '32px',
+  border: '1px solid rgba(96,99,146,0.3)'
+}}>
+  <h1 style={{
+    fontSize: '48px',
+    fontWeight: '700',
+    marginBottom: '16px',
+    color: '#ffffff',
+    fontFamily: 'Inter'
+  }}>
+    GRVT JavaScript Client
+  </h1>
+  <p style={{
+    fontSize: '20px',
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: '32px',
+    fontFamily: 'Inter'
+  }}>
+    Production-ready TypeScript/JavaScript SDK for seamless integration with GRVT's trading and market data APIs
+  </p>
+  <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+    <a href="/installation" style={{
+      background: '#238636',
+      color: '#ffffff',
+      padding: '12px 24px',
+      borderRadius: '6px',
+      textDecoration: 'none',
+      fontWeight: '600',
+      display: 'inline-block'
+    }}>
+      Get Started
+    </a>
+    <a href="/api/overview" style={{
+      background: 'transparent',
+      color: '#ffffff',
+      padding: '12px 24px',
+      borderRadius: '6px',
+      textDecoration: 'none',
+      fontWeight: '600',
+      border: '1px solid rgba(255,255,255,0.3)',
+      display: 'inline-block'
+    }}>
+      API Reference
+    </a>
+  </div>
+</div>
 
-Get your documentation site up and running in minutes.
+## Key Features
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Market Data Gateway" icon="chart-line" href="/guides/market-data">
+    Access real-time and historical market data including instruments, tickers, orderbooks, trades, and candlesticks
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Trading Data Gateway" icon="arrows-rotate" href="/guides/trading">
+    Execute and manage orders, track positions, handle account operations, and process transfers
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="WebSocket Streaming" icon="signal-stream" href="/guides/websockets">
+    Subscribe to real-time market data streams with full TypeScript support
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="TypeScript First" icon="code" href="/guides/typescript-usage">
+    Comprehensive type definitions with auto-generated interfaces for all API requests and responses
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## Quick Start
 
-Everything you need to create world-class documentation.
+<Steps>
+  <Step title="Install the package">
+    Install the GRVT client using your preferred package manager.
+    
+    <CodeGroup>
+    ```bash npm
+    npm install @grvt/client
+    ```
+    ```bash yarn
+    yarn add @grvt/client
+    ```
+    ```bash pnpm
+    pnpm add @grvt/client
+    ```
+    </CodeGroup>
+  </Step>
+  
+  <Step title="Initialize the client">
+    Import and configure the Market Data Gateway or Trading Data Gateway.
+    
+    ```typescript
+    import GRVT from '@grvt/client'
+    
+    // Initialize Market Data Gateway
+    const mdg = new GRVT.MDG({
+      host: 'https://market-data.grvt.io',
+      version: 'v1'
+    })
+    
+    // Initialize Trading Data Gateway
+    const tdg = new GRVT.TDG({
+      host: 'https://trading.grvt.io',
+      version: 'v1'
+    })
+    ```
+  </Step>
+  
+  <Step title="Start making requests">
+    Use the SDK to interact with GRVT APIs.
+    
+    ```typescript
+    // Fetch instrument data
+    const instruments = await mdg.allInstruments({})
+    
+    // Get market ticker
+    const ticker = await mdg.ticker({
+      instrument: 'BTC-USD-PERP'
+    })
+    
+    // Create an order
+    const order = await tdg.createOrder({
+      instrument: 'BTC-USD-PERP',
+      size: '0.1',
+      // ... additional order parameters
+    })
+    ```
+  </Step>
+</Steps>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## Explore the Documentation
 
-## Need inspiration?
+<CardGroup cols={3}>
+  <Card title="Installation" icon="download" href="/installation">
+    Set up the SDK in your project
+  </Card>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Build your first integration
+  </Card>
+  <Card title="Configuration" icon="gear" href="/concepts/configuration">
+    Configure the SDK for your environment
+  </Card>
+  <Card title="Market Data APIs" icon="chart-candlestick" href="/api/mdg/overview">
+    Access instruments, tickers, and market data
+  </Card>
+  <Card title="Trading APIs" icon="briefcase" href="/api/tdg/overview">
+    Manage orders, positions, and accounts
+  </Card>
+  <Card title="Examples" icon="code" href="/examples/basic-usage">
+    Learn from real-world examples
+  </Card>
+</CardGroup>
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="GitHub Repository" icon="github" href="https://github.com/gravity-technologies/grvt-js-client">
+    View source code and contribute
+  </Card>
+  <Card title="API Documentation" icon="book" href="https://api-docs.grvt.io">
+    Official GRVT API documentation
+  </Card>
+</CardGroup>

@@ -1,0 +1,290 @@
+---
+title: Connection Management
+description: WebSocket connection lifecycle, configuration, and control methods
+---
+
+The `WS` class manages WebSocket connections with automatic reconnection, subscription handling, and lifecycle events.
+
+## Constructor
+
+```typescript
+const ws = new WS(options: IOptions)
+```
+
+<ParamField path="options" type="IOptions" required>
+  Configuration options for the WebSocket connection
+
+  <ParamField path="url" type="string | URL" required>
+    WebSocket server URL (e.g., `wss://api.grvt.io/ws`)
+  </ParamField>
+
+  <ParamField path="protocols" type="string | string[]">
+    Optional WebSocket subprotocols
+  </ParamField>
+
+  <ParamField path="timeout" type="number">
+    Subscription timeout in milliseconds (default: 30000)
+  </ParamField>
+
+  <ParamField path="reconnectStrategy" type="(retries: number) => number | Error">
+    Function that returns reconnection delay in milliseconds based on retry count, or Error to stop reconnecting
+  </ParamField>
+</ParamField>
+
+## Connection Methods
+
+### connect()
+
+Establishes the WebSocket connection.
+
+```typescript
+ws.connect()
+```
+
+**Returns:** `this` (for method chaining)
+
+### disconnect()
+
+Closes the WebSocket connection and stops automatic reconnection.
+
+```typescript
+ws.disconnect()
+```
+
+**Returns:** `this` (for method chaining)
+
+### ready()
+
+Waits for the WebSocket to reach OPEN state.
+
+```typescript
+await ws.ready(delay?: number)
+```
+
+<ParamField path="delay" type="number">
+  Polling interval in milliseconds (default: 100)
+</ParamField>
+
+**Returns:** `Promise<WS>` - Resolves when connection is open, rejects if closed
+
+**Example:**
+
+```typescript
+try {
+  await ws.ready()
+  console.log('WebSocket is ready')
+} catch (error) {
+  console.error('WebSocket closed', error)
+}
+```
+
+### setParams()
+
+Updates URL query parameters and reconnects.
+
+```typescript
+ws.setParams(params: Record<string, string>)
+```
+
+<ParamField path="params" type="Record<string, string>" required>
+  Key-value pairs to set as URL query parameters
+</ParamField>
+
+**Returns:** `this` (for method chaining)
+
+**Example:**
+
+```typescript
+// Add authentication token to WebSocket URL
+ws.setParams({
+  api_key: 'your-api-key',
+  session: 'session-token'
+})
+```
+
+## Lifecycle Events
+
+### onConnect()
+
+Registers a callback for connection open events.
+
+```typescript
+const unsubscribe = ws.onConnect(() => {
+  console.log('WebSocket connected')
+})
+
+// Remove listener
+unsubscribe()
+```
+
+**Parameters:**
+- `callback: () => void` - Function to call when connection opens
+
+**Returns:** `() => void` - Function to remove the listener
+
+### onClose()
+
+Registers a callback for connection close events.
+
+```typescript
+const unsubscribe = ws.onClose((event: CloseEvent) => {
+  console.log('WebSocket closed', event.code, event.reason)
+})
+```
+
+**Parameters:**
+- `callback: (e: CloseEvent) => void` - Function to call when connection closes
+
+**Returns:** `() => void` - Function to remove the listener
+
+### onError()
+
+Registers a callback for error events.
+
+```typescript
+const unsubscribe = ws.onError((error: Event | WSError) => {
+  if (error instanceof WSError) {
+    console.error('WS Error:', error.message, error.code)
+  }
+})
+```
+
+**Parameters:**
+- `callback: (e: Event | WSError) => void` - Function to call on errors
+
+**Returns:** `() => void` - Function to remove the listener
+
+## Subscription Control
+
+### pause()
+
+Pauses message delivery without closing the connection. All active subscriptions are paused.
+
+```typescript
+ws.pause()
+```
+
+**Returns:** `this` (for method chaining)
+
+### resume()
+
+Resumes message delivery for all subscriptions.
+
+```typescript
+ws.resume()
+```
+
+**Returns:** `this` (for method chaining)
+
+**Example:**
+
+```typescript
+// Pause updates during intensive computation
+ws.pause()
+
+try {
+  await performHeavyCalculation()
+} finally {
+  ws.resume()
+}
+```
+
+## Reconnection Strategy
+
+The reconnection strategy controls automatic reconnection behavior:
+
+```typescript
+const ws = new WS({
+  url: 'wss://api.grvt.io/ws',
+  reconnectStrategy: (retries: number) => {
+    // Exponential backoff with max delay
+    const delay = Math.min(1000 * Math.pow(2, retries), 30000)
+    
+    // Stop reconnecting after 10 attempts
+    if (retries > 10) {
+      return new Error('Max reconnection attempts reached')
+    }
+    
+    return delay
+  }
+})
+```
+
+**Strategy Function:**
+- **Input:** `retries: number` - Current retry count (0-indexed)
+- **Output:** `number | Error`
+  - `number`: Delay in milliseconds before next attempt
+  - `Error`: Stop reconnecting and throw error
+
+## WSError Class
+
+WebSocket-specific error class with additional properties:
+
+```typescript
+class WSError extends Error {
+  code?: number
+  status?: number
+  message: string
+}
+```
+
+<ResponseField name="code" type="number">
+  Error code from server
+</ResponseField>
+
+<ResponseField name="status" type="number">
+  HTTP-style status code
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable error message
+</ResponseField>
+
+## Complete Example
+
+```typescript
+import { WS, WSError } from '@grvt/sdk'
+
+const ws = new WS({
+  url: 'wss://api.grvt.io/ws',
+  timeout: 10000,
+  reconnectStrategy: (retries) => {
+    if (retries > 5) {
+      return new Error('Too many reconnection attempts')
+    }
+    return 1000 * Math.pow(2, retries)
+  }
+})
+
+// Connection lifecycle
+ws.onConnect(() => {
+  console.log('Connected to GRVT WebSocket')
+})
+
+ws.onClose((event) => {
+  console.log('Disconnected:', event.reason)
+})
+
+ws.onError((error) => {
+  if (error instanceof WSError) {
+    console.error(`Error ${error.code}: ${error.message}`)
+  }
+})
+
+// Connect
+ws.connect()
+
+// Wait for connection
+await ws.ready()
+
+// Subscribe to streams
+const tradeKey = ws.subscribe({
+  stream: 'trade',
+  params: { instrument: 'BTC_USDT_Perp', limit: 100 },
+  onData: (trades) => console.log('Trades:', trades)
+})
+
+// Later: cleanup
+ws.unsubscribe(tradeKey)
+ws.disconnect()
+```

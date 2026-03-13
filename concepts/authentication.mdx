@@ -1,0 +1,316 @@
+---
+title: Authentication
+description: Learn how to authenticate requests with the GRVT JavaScript Client SDK
+---
+
+## Overview
+
+The GRVT JavaScript Client SDK handles authentication through HTTP cookies using Axios's built-in credential handling. Different API endpoints have different authentication requirements.
+
+## Authentication Mechanism
+
+The SDK uses Axios with `withCredentials: true` for authenticated requests. This is configured in the Axios instance created by `createAxiosInstance()` from `src/services/restful.service.ts:3`:
+
+```typescript
+import axios from 'axios'
+
+export const createAxiosInstance = () => {
+  const instance = axios.create({
+    withCredentials: true,
+    headers: { 'Content-Type': 'application/json' }
+  })
+
+  instance.interceptors.response.use(undefined, (error) => {
+    if (error.response?.data?.api_msg) {
+      error.message = error.response.data.api_msg
+    }
+    throw error
+  })
+
+  return instance
+}
+```
+
+### Key Authentication Features
+
+1. **Credentials Included**: The `withCredentials: true` setting ensures that cookies are sent with cross-origin requests.
+2. **Content-Type Header**: All requests use `application/json` content type.
+3. **Error Message Mapping**: The response interceptor extracts API error messages from the response data.
+
+## Accessing the Axios Instance
+
+Both TDG and MDG clients expose the underlying Axios instance through a getter, allowing you to customize authentication:
+
+```typescript
+import { TDG } from '@grvt/client'
+
+const tdg = new TDG({
+  host: 'https://api.grvt.io',
+  version: 'v1'
+})
+
+// Access the Axios instance
+const axiosInstance = tdg.axios
+
+// Add custom authentication headers
+axiosInstance.defaults.headers.common['Authorization'] = 'Bearer YOUR_TOKEN'
+```
+
+## Authentication by API Type
+
+### Trading Data Gateway (TDG) - Authenticated
+
+All TDG endpoints require authentication. The SDK uses the authenticated Axios instance with credentials:
+
+```typescript
+import { TDG } from '@grvt/client'
+
+const tdg = new TDG({
+  host: 'https://api.grvt.io'
+})
+
+// All TDG methods require authentication
+const positions = await tdg.positions({
+  subAccountId: 'your-sub-account-id'
+})
+
+const order = await tdg.createOrder({
+  subAccountId: 'your-sub-account-id',
+  instrument: 'BTC-PERP',
+  size: '0.1',
+  // ... other order parameters
+})
+```
+
+### Market Data Gateway (MDG) - Mixed Authentication
+
+MDG endpoints have different authentication requirements. Public market data endpoints override credentials:
+
+#### Public Endpoints (No Authentication Required)
+
+These endpoints explicitly set `withCredentials: false`:
+
+```typescript
+import { MDG } from '@grvt/client'
+
+const mdg = new MDG({
+  host: 'https://market-data.dev.gravitymarkets.io'
+})
+
+// Public endpoints - no authentication needed
+const instruments = await mdg.instruments({
+  kind: 'PERPETUAL'
+})
+
+const ticker = await mdg.ticker({
+  instrument: 'BTC-PERP'
+})
+
+const orderbook = await mdg.orderBook({
+  instrument: 'BTC-PERP'
+})
+```
+
+From `src/MDG/index.ts:115`:
+
+```typescript
+instrument (payload: IApiGetInstrumentRequest, config?: AxiosRequestConfig) {
+  return this._axios.post(
+    this._liteUrl + '/instrument',
+    Utils.schemaMap(payload, API_GET_INSTRUMENT_REQUEST_MAP.FULL_TO_LITE, true),
+    {
+      ...config,
+      withCredentials: false  // Public endpoint
+    }
+  ).then((response) => {
+    return Utils.schemaMap(response.data, API_GET_INSTRUMENT_RESPONSE_MAP.LITE_TO_FULL) as IApiGetInstrumentResponse
+  }).catch(Utils.coverApiError)
+}
+```
+
+#### Private Endpoints (Authentication Required)
+
+Vault-related endpoints require authentication:
+
+```typescript
+// Private endpoints - authentication required
+const vaultPerformance = await mdg.vaultPerformance({
+  vaultIds: ['vault-id-1', 'vault-id-2']
+})
+
+const vaultAssetExposure = await mdg.vaultAssetExposure({
+  vaultId: 'your-vault-id',
+  startTime: '1234567890000000000',
+  endTime: '1234567890999999999'
+})
+```
+
+From `src/MDG/index.ts:292`:
+
+```typescript
+vaultAssetExposure (payload: IApiTimedVaultAssetExposureRequest, config?: AxiosRequestConfig) {
+  return this._axios.post(
+    this._liteUrl + '/vault_asset_exposure',
+    Utils.schemaMap(payload, API_TIMED_VAULT_ASSET_EXPOSURE_REQUEST_MAP.FULL_TO_LITE, true),
+    config  // Uses default withCredentials: true
+  ).then((response) => {
+    return Utils.schemaMap(response.data, API_TIMED_ASSET_EXPOSURE_RESPONSE_MAP.LITE_TO_FULL) as IApiTimedAssetExposureResponse
+  }).catch(Utils.coverApiError)
+}
+```
+
+## Custom Request Configuration
+
+All SDK methods accept an optional `AxiosRequestConfig` parameter for customization:
+
+```typescript
+import type { AxiosRequestConfig } from 'axios'
+import { TDG } from '@grvt/client'
+
+const tdg = new TDG({
+  host: 'https://api.grvt.io'
+})
+
+// Custom configuration per request
+const customConfig: AxiosRequestConfig = {
+  timeout: 5000,
+  headers: {
+    'X-Custom-Header': 'value'
+  }
+}
+
+const positions = await tdg.positions(
+  { subAccountId: 'your-sub-account-id' },
+  customConfig
+)
+```
+
+## Setting Up Authentication
+
+<Warning>
+The SDK relies on cookie-based authentication. Your application must handle the authentication flow to establish a session before making authenticated API calls.
+</Warning>
+
+### Browser Environment
+
+In browser environments, cookies are automatically managed:
+
+```typescript
+// 1. Authenticate user (example flow)
+await fetch('https://api.grvt.io/auth/login', {
+  method: 'POST',
+  credentials: 'include',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ username, password })
+})
+
+// 2. Create SDK client - cookies are automatically included
+const tdg = new TDG({
+  host: 'https://api.grvt.io'
+})
+
+// 3. Make authenticated requests
+const summary = await tdg.subAccountSummary({
+  subAccountId: 'your-sub-account-id'
+})
+```
+
+### Node.js Environment
+
+In Node.js, you may need to handle cookie management explicitly:
+
+```typescript
+import { TDG } from '@grvt/client'
+import { wrapper } from 'axios-cookiejar-support'
+import { CookieJar } from 'tough-cookie'
+
+const tdg = new TDG({
+  host: 'https://api.grvt.io'
+})
+
+// Wrap Axios instance with cookie jar support
+const jar = new CookieJar()
+wrapper(tdg.axios)
+tdg.axios.defaults.jar = jar
+
+// Now cookies will be persisted across requests
+```
+
+## Authentication Error Handling
+
+Authentication errors are returned as standard API errors. See the [Error Handling](/concepts/error-handling) guide for details on handling authentication failures.
+
+```typescript
+import type { AxiosError } from 'axios'
+import type { IError } from '@grvt/client'
+import { TDG } from '@grvt/client'
+
+const tdg = new TDG({
+  host: 'https://api.grvt.io'
+})
+
+try {
+  const positions = await tdg.positions({
+    subAccountId: 'your-sub-account-id'
+  })
+} catch (error) {
+  const axiosError = error as AxiosError<IError>
+  
+  if (axiosError.response?.status === 401) {
+    console.error('Authentication failed:', axiosError.response.data)
+    // Redirect to login or refresh authentication
+  }
+}
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Use Environment Variables for Hosts">
+    Store API hosts in environment variables to easily switch between development and production:
+    
+    ```typescript
+    const tdg = new TDG({
+      host: process.env.GRVT_API_HOST || 'https://api.grvt.io'
+    })
+    ```
+  </Accordion>
+
+  <Accordion title="Handle Session Expiration">
+    Implement session refresh logic to handle expired authentication:
+    
+    ```typescript
+    tdg.axios.interceptors.response.use(
+      response => response,
+      async error => {
+        if (error.response?.status === 401) {
+          // Attempt to refresh session
+          await refreshSession()
+          // Retry original request
+          return tdg.axios.request(error.config)
+        }
+        throw error
+      }
+    )
+    ```
+  </Accordion>
+
+  <Accordion title="Keep Credentials Secure">
+    Never log or expose authentication cookies:
+    
+    ```typescript
+    // ❌ DON'T
+    console.log(tdg.axios.defaults.headers)
+    
+    // ✅ DO
+    // Keep authentication details private
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+- Learn about [Error Handling](/concepts/error-handling) for managing API errors
+- Explore [Configuration](/concepts/configuration) options
+- Review [TDG Methods](/api/tdg/overview) for trading operations
+- Review [MDG Methods](/api/mdg/overview) for market data

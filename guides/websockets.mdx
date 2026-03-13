@@ -1,0 +1,604 @@
+---
+title: WebSocket Streaming
+description: Stream real-time market data and account updates using the WebSocket client
+---
+
+The GRVT WebSocket client provides real-time streaming of market data, order updates, position changes, and account events. This guide covers connection management, subscription handling, and data streaming.
+
+## Initialization
+
+Create a WebSocket connection with automatic reconnection:
+
+```typescript
+import { WS } from '@grvt/client';
+
+const ws = new WS({
+  url: 'wss://ws.grvt.io',
+  protocols: [], // optional
+  timeout: 30000, // subscription timeout in ms (default: 30000)
+  reconnectStrategy: (retries) => {
+    // Exponential backoff: 1s, 2s, 4s, 8s, max 30s
+    const delay = Math.min(1000 * Math.pow(2, retries), 30000);
+    return delay;
+  }
+});
+```
+
+<Note>
+The WebSocket client automatically handles reconnection and re-subscription when the connection is lost.
+</Note>
+
+## Connection Management
+
+### Connecting
+
+```typescript
+// Connect to WebSocket
+ws.connect();
+
+// Wait for connection to be ready
+await ws.ready();
+console.log('WebSocket connected');
+```
+
+### Connection Events
+
+```typescript
+// Listen for connection open
+ws.onConnect(() => {
+  console.log('WebSocket connected');
+});
+
+// Listen for connection close
+ws.onClose((event) => {
+  console.log('WebSocket closed:', event.code, event.reason);
+});
+
+// Listen for errors
+ws.onError((error) => {
+  console.error('WebSocket error:', error);
+});
+```
+
+### Disconnecting
+
+```typescript
+// Disconnect and stop reconnection attempts
+ws.disconnect();
+```
+
+## Market Data Streams
+
+### Candlestick Data
+
+Stream real-time candlestick updates:
+
+```typescript
+import { EStream } from '@grvt/client';
+
+const candleSubscription = ws.subscribe({
+  stream: EStream.CANDLE,
+  params: {
+    instrument: 'BTC_USDT_Perp',
+    interval: '1H', // '1M', '5M', '15M', '1H', '4H', '1D'
+    type: 'MARK' // 'MARK', 'INDEX', 'LAST'
+  },
+  onData: (candle) => {
+    console.log('Candle update:', candle);
+    // { timestamp, open, high, low, close, volume }
+  },
+  onError: (error) => {
+    console.error('Candle subscription error:', error);
+  }
+});
+```
+
+### Orderbook Streams
+
+<Tabs>
+  <Tab title="Orderbook Snapshots">
+    Receive periodic full orderbook snapshots:
+    
+    ```typescript
+    const bookSnap = ws.subscribe({
+      stream: EStream.RPI_BOOK_SNAP,
+      params: {
+        instrument: 'BTC_USDT_Perp',
+        depth: 20, // Number of levels (default: 10)
+        rate: 1000 // Update rate in ms (default: 1000)
+      },
+      onData: (orderbook) => {
+        console.log('Orderbook snapshot:', orderbook);
+        // { bids: [[price, size], ...], asks: [[price, size], ...] }
+      }
+    });
+    ```
+  </Tab>
+  
+  <Tab title="Orderbook Deltas">
+    Receive incremental orderbook updates:
+    
+    ```typescript
+    const bookDelta = ws.subscribe({
+      stream: EStream.RPI_BOOK_DELTA,
+      params: {
+        instrument: 'BTC_USDT_Perp',
+        rate: 1000 // Update rate in ms
+      },
+      onData: (delta) => {
+        console.log('Orderbook delta:', delta);
+        // Only changed levels are sent
+      }
+    });
+    ```
+  </Tab>
+</Tabs>
+
+### Ticker Streams
+
+<Tabs>
+  <Tab title="Mini Ticker">
+    Stream lightweight price updates:
+    
+    ```typescript
+    const miniTicker = ws.subscribe({
+      stream: EStream.MINI_SNAP,
+      params: {
+        instrument: 'BTC_USDT_Perp',
+        rate: 1000 // Update rate in ms
+      },
+      onData: (ticker) => {
+        console.log('Mini ticker:', ticker);
+        // { last_price, timestamp }
+      }
+    });
+    ```
+  </Tab>
+  
+  <Tab title="Full Ticker">
+    Stream comprehensive ticker data:
+    
+    ```typescript
+    const ticker = ws.subscribe({
+      stream: EStream.TICKER_SNAP,
+      params: {
+        instrument: 'BTC_USDT_Perp',
+        rate: 1000
+      },
+      onData: (ticker) => {
+        console.log('Full ticker:', ticker);
+        // { last_price, mark_price, index_price, volume, high, low, ... }
+      }
+    });
+    ```
+  </Tab>
+</Tabs>
+
+### Public Trades
+
+Stream real-time public trades:
+
+```typescript
+const trades = ws.subscribe({
+  stream: EStream.TRADE,
+  params: {
+    instrument: 'BTC_USDT_Perp',
+    limit: 500 // Max trades to buffer (default: 500)
+  },
+  onData: (trade) => {
+    console.log('New trade:', trade);
+    // { price, size, side, timestamp, trade_id }
+  }
+});
+```
+
+## Trading Account Streams
+
+<Note>
+Account streams require authentication. Set query parameters with account credentials before subscribing.
+</Note>
+
+### Order Updates
+
+```typescript
+// Set authentication parameters
+ws.setParams({
+  api_key: 'your_api_key',
+  signature: 'your_signature',
+  timestamp: Date.now().toString()
+});
+
+// Subscribe to order updates
+const orders = ws.subscribe({
+  stream: EStream.ORDER,
+  params: {
+    sub_account_id: 'sub_account_123',
+    instrument: 'BTC_USDT_Perp' // optional, omit for all instruments
+  },
+  onData: (order) => {
+    console.log('Order update:', order);
+    // { order_id, status, filled_size, remaining_size, ... }
+  }
+});
+```
+
+### Order State Changes
+
+Stream order state transitions:
+
+```typescript
+const orderState = ws.subscribe({
+  stream: EStream.STATE,
+  params: {
+    sub_account_id: 'sub_account_123',
+    instrument: 'BTC_USDT_Perp'
+  },
+  onData: (state) => {
+    console.log('Order state change:', state);
+    // { order_id, old_state, new_state, timestamp }
+  }
+});
+```
+
+### Order Groups
+
+Stream order group updates (for multi-leg orders):
+
+```typescript
+const orderGroups = ws.subscribe({
+  stream: EStream.GROUP,
+  params: {
+    sub_account_id: 'sub_account_123'
+  },
+  onData: (group) => {
+    console.log('Order group update:', group);
+  }
+});
+```
+
+### Position Updates
+
+Stream real-time position changes:
+
+```typescript
+const positions = ws.subscribe({
+  stream: EStream.POSITION,
+  params: {
+    sub_account_id: 'sub_account_123',
+    instrument: 'BTC_USDT_Perp' // optional
+  },
+  onData: (position) => {
+    console.log('Position update:', position);
+    // { instrument, size, entry_price, unrealized_pnl, ... }
+  }
+});
+```
+
+### Fill Updates
+
+Stream trade execution notifications:
+
+```typescript
+const fills = ws.subscribe({
+  stream: EStream.FILL,
+  params: {
+    sub_account_id: 'sub_account_123',
+    instrument: 'BTC_USDT_Perp' // optional
+  },
+  onData: (fill) => {
+    console.log('New fill:', fill);
+    // { order_id, price, size, fee, timestamp, ... }
+  }
+});
+```
+
+## Account Activity Streams
+
+### Deposits
+
+Stream deposit notifications:
+
+```typescript
+const deposits = ws.subscribe({
+  stream: EStream.DEPOSIT,
+  params: {
+    main_account_id: 'main_account'
+  },
+  onData: (deposit) => {
+    console.log('Deposit received:', deposit);
+    // { currency, amount, status, timestamp, ... }
+  }
+});
+```
+
+### Transfers
+
+Stream internal transfer notifications:
+
+```typescript
+const transfers = ws.subscribe({
+  stream: EStream.TRANSFER,
+  params: {
+    main_account_id: 'main_account',
+    sub_account_id: 'sub_account_123' // optional
+  },
+  onData: (transfer) => {
+    console.log('Transfer:', transfer);
+    // { from, to, currency, amount, timestamp, ... }
+  }
+});
+```
+
+### Withdrawals
+
+Stream withdrawal status updates:
+
+```typescript
+const withdrawals = ws.subscribe({
+  stream: EStream.WITHDRAWAL,
+  params: {
+    main_account_id: 'main_account'
+  },
+  onData: (withdrawal) => {
+    console.log('Withdrawal:', withdrawal);
+    // { currency, amount, status, timestamp, ... }
+  }
+});
+```
+
+## Subscription Management
+
+### Multiple Subscriptions
+
+Subscribe to multiple streams at once:
+
+```typescript
+const subscriptionIds = ws.subscribes(
+  {
+    stream: EStream.TICKER_SNAP,
+    params: { instrument: 'BTC_USDT_Perp', rate: 1000 },
+    onData: (ticker) => console.log('BTC ticker:', ticker)
+  },
+  {
+    stream: EStream.TICKER_SNAP,
+    params: { instrument: 'ETH_USDT_Perp', rate: 1000 },
+    onData: (ticker) => console.log('ETH ticker:', ticker)
+  },
+  {
+    stream: EStream.TRADE,
+    params: { instrument: 'BTC_USDT_Perp' },
+    onData: (trade) => console.log('BTC trade:', trade)
+  }
+);
+
+console.log('Subscription IDs:', subscriptionIds);
+```
+
+### Unsubscribing
+
+Unsubscribe from specific streams:
+
+```typescript
+// Unsubscribe using subscription ID
+ws.unsubscribe(candleSubscription);
+
+// Unsubscribe from multiple streams
+ws.unsubscribe(...subscriptionIds);
+```
+
+### Pause and Resume
+
+<Steps>
+  <Step title="Pause Subscriptions">
+    Temporarily pause all data streaming without disconnecting:
+    
+    ```typescript
+    ws.pause();
+    console.log('All subscriptions paused');
+    ```
+  </Step>
+  
+  <Step title="Resume Subscriptions">
+    Resume streaming data:
+    
+    ```typescript
+    ws.resume();
+    console.log('Subscriptions resumed');
+    ```
+  </Step>
+</Steps>
+
+## Complete Trading Example
+
+Here's a complete example monitoring orders and positions:
+
+```typescript
+import { WS, EStream } from '@grvt/client';
+
+const ws = new WS({
+  url: 'wss://ws.grvt.io',
+  reconnectStrategy: (retries) => Math.min(1000 * Math.pow(2, retries), 30000)
+});
+
+// Set authentication
+ws.setParams({
+  api_key: 'your_api_key',
+  signature: 'your_signature',
+  timestamp: Date.now().toString()
+});
+
+// Track application state
+const state = {
+  positions: new Map(),
+  orders: new Map()
+};
+
+// Connect and subscribe
+ws.onConnect(() => {
+  console.log('Connected to WebSocket');
+  
+  // Subscribe to multiple streams
+  ws.subscribes(
+    // Position updates
+    {
+      stream: EStream.POSITION,
+      params: { sub_account_id: 'sub_account_123' },
+      onData: (position) => {
+        state.positions.set(position.instrument, position);
+        console.log('Position updated:', position);
+      }
+    },
+    
+    // Order updates
+    {
+      stream: EStream.ORDER,
+      params: { sub_account_id: 'sub_account_123' },
+      onData: (order) => {
+        state.orders.set(order.order_id, order);
+        console.log('Order updated:', order);
+        
+        if (order.status === 'FILLED') {
+          console.log('Order filled!', order.order_id);
+        }
+      }
+    },
+    
+    // Fill notifications
+    {
+      stream: EStream.FILL,
+      params: { sub_account_id: 'sub_account_123' },
+      onData: (fill) => {
+        console.log('Trade executed:', {
+          order_id: fill.order_id,
+          price: fill.price,
+          size: fill.size,
+          fee: fill.fee
+        });
+      }
+    },
+    
+    // Market data for monitoring
+    {
+      stream: EStream.TICKER_SNAP,
+      params: { instrument: 'BTC_USDT_Perp', rate: 1000 },
+      onData: (ticker) => {
+        console.log('BTC Price:', ticker.last_price);
+      }
+    }
+  );
+});
+
+ws.onError((error) => {
+  console.error('WebSocket error:', error);
+});
+
+ws.onClose((event) => {
+  console.log('WebSocket closed, will reconnect...');
+});
+
+// Connect
+ws.connect();
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+  console.log('Shutting down...');
+  ws.disconnect();
+  process.exit(0);
+});
+```
+
+## Error Handling
+
+Handle WebSocket errors properly:
+
+```typescript
+ws.onError((error) => {
+  if (error instanceof WSError) {
+    console.error('WebSocket API error:', {
+      code: error.code,
+      status: error.status,
+      message: error.message
+    });
+    
+    // Handle specific error codes
+    if (error.code === 401) {
+      console.error('Authentication failed, refreshing credentials...');
+      // Refresh and reconnect
+    }
+  } else {
+    console.error('WebSocket connection error:', error);
+  }
+});
+
+// Per-subscription error handling
+ws.subscribe({
+  stream: EStream.TICKER_SNAP,
+  params: { instrument: 'BTC_USDT_Perp' },
+  onData: (ticker) => console.log(ticker),
+  onError: (error) => {
+    console.error('Ticker subscription failed:', error.message);
+    // Handle subscription-specific errors
+  }
+});
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Connection Management">
+    - Always implement a reconnection strategy with exponential backoff
+    - Use `onConnect` to initialize subscriptions after reconnection
+    - Monitor connection status with `onClose` and `onError` handlers
+    - Call `disconnect()` on application shutdown to close cleanly
+  </Accordion>
+  
+  <Accordion title="Subscription Handling">
+    - Subscribe to multiple streams in a single `subscribes()` call for efficiency
+    - Store subscription IDs to unsubscribe later
+    - Use instrument-specific subscriptions to reduce bandwidth
+    - Implement per-subscription error handlers for better debugging
+  </Accordion>
+  
+  <Accordion title="Data Processing">
+    - Keep `onData` handlers lightweight to avoid blocking the event loop
+    - Use async operations carefully to prevent data processing backlog
+    - Consider using a message queue for heavy processing
+    - Implement state reconciliation after reconnection
+  </Accordion>
+  
+  <Accordion title="Authentication">
+    - Refresh authentication parameters before they expire
+    - Use `setParams()` to update credentials without reconnecting
+    - Handle 401 errors by refreshing credentials and resubscribing
+  </Accordion>
+</AccordionGroup>
+
+## Stream Reference
+
+| Stream | Description | Requires Auth |
+|--------|-------------|---------------|
+| `CANDLE` | Candlestick/OHLCV data | No |
+| `RPI_BOOK_SNAP` | Full orderbook snapshots | No |
+| `RPI_BOOK_DELTA` | Orderbook updates | No |
+| `MINI_SNAP` | Lightweight ticker | No |
+| `TICKER_SNAP` | Full ticker data | No |
+| `TRADE` | Public trades | No |
+| `ORDER` | Order updates | Yes |
+| `STATE` | Order state changes | Yes |
+| `GROUP` | Order group updates | Yes |
+| `POSITION` | Position updates | Yes |
+| `FILL` | Trade executions | Yes |
+| `DEPOSIT` | Deposit notifications | Yes |
+| `TRANSFER` | Transfer notifications | Yes |
+| `WITHDRAWAL` | Withdrawal notifications | Yes |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Market Data Guide" icon="chart-line" href="/guides/market-data">
+    Learn about REST API market data methods
+  </Card>
+  <Card title="Trading Guide" icon="arrows-repeat" href="/guides/trading">
+    Explore trading operations and order management
+  </Card>
+</CardGroup>

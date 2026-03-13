@@ -1,0 +1,137 @@
+---
+title: MDG Overview
+description: Market Data Gateway API reference
+---
+
+The MDG (Market Data Gateway) class provides access to public market data, instrument information, and vault metrics from the Gravity exchange. All MDG endpoints are unauthenticated and can be accessed without credentials.
+
+## Class Definition
+
+```typescript
+class MDG {
+  constructor(config: IConfig)
+  get axios(): AxiosInstance
+}
+```
+
+## Constructor
+
+Creates a new MDG instance with the specified configuration.
+
+<ParamField path="config" type="IConfig" required>
+  Configuration object for the MDG client
+  
+  <Expandable title="properties">
+    <ParamField path="host" type="string" required>
+      The API host URL (e.g., `https://api.grvt.io`)
+    </ParamField>
+    
+    <ParamField path="version" type="string" required>
+      The API version (e.g., `v1`)
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Example
+
+```typescript
+import { MDG } from '@grvt/client';
+
+const mdg = new MDG({
+  host: 'https://api.grvt.io',
+  version: 'v1'
+});
+```
+
+## Properties
+
+### axios
+
+Provides access to the underlying Axios instance used for making HTTP requests.
+
+```typescript
+const axiosInstance = mdg.axios;
+```
+
+## Method Categories
+
+The MDG class provides methods organized into the following categories:
+
+### Instrument Methods
+
+Query and filter trading instruments available on the platform.
+
+- [`instrument`](/api/mdg/instruments#instrument) - Get a single instrument by name
+- [`instruments`](/api/mdg/instruments#instruments) - Get filtered instruments
+- [`allInstruments`](/api/mdg/instruments#allinstruments) - Get all available instruments
+
+[View Instrument Methods Documentation](/api/mdg/instruments)
+
+### Market Data Methods
+
+Access real-time and historical market data including prices, order books, trades, and funding information.
+
+- [`ticker`](/api/mdg/market-data#ticker) - Get ticker information for an instrument
+- [`miniTicker`](/api/mdg/market-data#miniticker) - Get lightweight ticker data
+- [`orderBook`](/api/mdg/market-data#orderbook) - Get order book levels
+- [`trade`](/api/mdg/market-data#trade) - Get recent trade data
+- [`tradesHistory`](/api/mdg/market-data#tradeshistory) - Get historical trades
+- [`candlestick`](/api/mdg/market-data#candlestick) - Get OHLCV candlestick data
+- [`funding`](/api/mdg/market-data#funding) - Get funding rate information
+- [`settlement`](/api/mdg/market-data#settlement) - Get settlement price data
+- [`liveFundingRateComparison`](/api/mdg/market-data#livefundingratecomparison) - Compare live funding rates
+- [`fundingHistoryComparison`](/api/mdg/market-data#fundinghistorycomparison) - Compare historical funding rates
+- [`marginRules`](/api/mdg/market-data#marginrules) - Get margin rules for instruments
+
+[View Market Data Methods Documentation](/api/mdg/market-data)
+
+### Vault Data Methods
+
+Retrieve vault performance metrics, positions, and historical data.
+
+- [`vaultAssetExposure`](/api/mdg/vault-data#vaultassetexposure) - Get vault asset exposure over time
+- [`snapVaultPosition`](/api/mdg/vault-data#snapvaultposition) - Get snapshot of vault positions
+- [`vaultDetail`](/api/mdg/vault-data#vaultdetail) - Get detailed vault information
+- [`vaultPerformance`](/api/mdg/vault-data#vaultperformance) - Get vault performance metrics
+- [`vaultPerformanceTrend`](/api/mdg/vault-data#vaultperformancetrend) - Get vault performance trends
+- [`vaultRiskMetric`](/api/mdg/vault-data#vaultriskmetric) - Get vault risk metrics
+- [`vaultSummaryHistory`](/api/mdg/vault-data#vaultsummaryhistory) - Get vault summary history
+- [`vaultSubAccountSummaryHistory`](/api/mdg/vault-data#vaultsubaccountsummaryhistory) - Get vault sub-account summary history
+
+[View Vault Data Methods Documentation](/api/mdg/vault-data)
+
+## Internal Implementation
+
+The MDG class uses two internal URL endpoints:
+
+- **Full URL**: `{host}/full/{version}` - Used for full schema requests
+- **Lite URL**: `{host}/lite/{version}` - Used for optimized lite schema requests
+
+All requests are automatically converted between full and lite schema formats using internal schema mapping utilities. Responses are transformed back to the full schema format before being returned to the caller.
+
+## Request Configuration
+
+All MDG methods accept an optional `AxiosRequestConfig` parameter as the second argument, allowing you to customize the HTTP request:
+
+```typescript
+const ticker = await mdg.ticker(
+  { instrument: 'BTC_USDT_Perp' },
+  {
+    timeout: 5000,
+    headers: { 'X-Custom-Header': 'value' }
+  }
+);
+```
+
+## Error Handling
+
+All methods catch errors and process them through `Utils.coverApiError` to provide consistent error handling:
+
+```typescript
+try {
+  const result = await mdg.instrument({ instrument: 'BTC_USDT_Perp' });
+} catch (error) {
+  // Error has been processed by Utils.coverApiError
+  console.error('API Error:', error);
+}
+```

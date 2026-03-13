@@ -1,0 +1,206 @@
+---
+title: Configuration Types
+description: Configuration interfaces for SDK initialization
+---
+
+Configuration types used to initialize and configure the GRVT SDK.
+
+## IConfig
+
+Core configuration interface for REST API clients.
+
+```typescript
+interface IConfig {
+  host: string
+  version?: `v${number}`
+}
+```
+
+<ParamField path="host" type="string" required>
+  API host URL (e.g., `https://api.grvt.io`). Trailing slashes are automatically removed.
+</ParamField>
+
+<ParamField path="version" type="`v${number}`">
+  API version string (default: `v1`). Must match the pattern `v` followed by a number.
+</ParamField>
+
+**Example:**
+
+```typescript
+import { validConfig } from '@grvt/sdk'
+
+const config: IConfig = {
+  host: 'https://api.grvt.io',
+  version: 'v1'
+}
+
+// Validate and normalize config
+const normalized = validConfig(config)
+// normalized.version will be 'v1' even if not specified
+// normalized.host will have trailing slash removed
+```
+
+## validConfig()
+
+Validates and normalizes an `IConfig` object.
+
+```typescript
+function validConfig(config: IConfig): IConfig
+```
+
+**Behavior:**
+
+1. Throws an error if `host` is missing or empty
+2. Removes trailing slash from `host` if present
+3. Sets `version` to `'v1'` if not specified
+
+**Example:**
+
+```typescript
+try {
+  const config = validConfig({
+    host: 'https://api.grvt.io/',
+    // version defaults to 'v1'
+  })
+  
+  console.log(config.host)    // 'https://api.grvt.io'
+  console.log(config.version) // 'v1'
+} catch (error) {
+  console.error('Invalid config:', error.message)
+}
+```
+
+**Throws:**
+
+```typescript
+Error: 'API requires a host'
+```
+
+## WebSocket Configuration
+
+Configuration for WebSocket connections. See [WebSocket Connection](/api/websocket/connection) for details.
+
+```typescript
+interface IOptions {
+  url: string | URL
+  protocols?: string | string[]
+  timeout?: number
+  reconnectStrategy?: (retries: number) => number | Error
+}
+```
+
+<ParamField path="url" type="string | URL" required>
+  WebSocket server URL (e.g., `wss://api.grvt.io/ws`)
+</ParamField>
+
+<ParamField path="protocols" type="string | string[]">
+  WebSocket subprotocol(s) to use
+</ParamField>
+
+<ParamField path="timeout" type="number">
+  Subscription timeout in milliseconds (default: 30000)
+</ParamField>
+
+<ParamField path="reconnectStrategy" type="(retries: number) => number | Error">
+  Function that returns reconnection delay in ms or Error to stop reconnecting
+</ParamField>
+
+**Example:**
+
+```typescript
+import { WS } from '@grvt/sdk'
+
+const ws = new WS({
+  url: 'wss://api.grvt.io/ws',
+  timeout: 10000,
+  reconnectStrategy: (retries) => {
+    // Exponential backoff: 1s, 2s, 4s, 8s...
+    const delay = Math.min(1000 * Math.pow(2, retries), 30000)
+    
+    // Stop after 10 attempts
+    if (retries > 10) {
+      return new Error('Max retries exceeded')
+    }
+    
+    return delay
+  }
+})
+```
+
+## Best Practices
+
+### Environment-Specific Configuration
+
+```typescript
+const getConfig = (env: 'production' | 'staging' | 'development'): IConfig => {
+  const hosts = {
+    production: 'https://api.grvt.io',
+    staging: 'https://staging-api.grvt.io',
+    development: 'http://localhost:8080'
+  }
+  
+  return validConfig({
+    host: hosts[env],
+    version: 'v1'
+  })
+}
+```
+
+### Type-Safe Version Strings
+
+The `version` field uses a template literal type to ensure it starts with `'v'` followed by a number:
+
+```typescript
+// Valid
+const config1: IConfig = { host: 'https://api.grvt.io', version: 'v1' }
+const config2: IConfig = { host: 'https://api.grvt.io', version: 'v2' }
+
+// TypeScript error: Type '"1"' is not assignable to type '`v${number}`'
+const config3: IConfig = { host: 'https://api.grvt.io', version: '1' }
+
+// TypeScript error: Type '"version1"' is not assignable to type '`v${number}`'
+const config4: IConfig = { host: 'https://api.grvt.io', version: 'version1' }
+```
+
+### Reconnection Strategies
+
+**Exponential Backoff:**
+
+```typescript
+const exponentialBackoff = (retries: number) => {
+  return Math.min(1000 * Math.pow(2, retries), 30000)
+}
+```
+
+**Linear Backoff:**
+
+```typescript
+const linearBackoff = (retries: number) => {
+  return Math.min(1000 * retries, 10000)
+}
+```
+
+**Fibonacci Backoff:**
+
+```typescript
+const fibonacciBackoff = (() => {
+  const fib = [1000, 1000]
+  return (retries: number) => {
+    while (fib.length <= retries) {
+      fib.push(fib[fib.length - 1] + fib[fib.length - 2])
+    }
+    return Math.min(fib[retries], 30000)
+  }
+})()
+```
+
+**With Max Retries:**
+
+```typescript
+const limitedRetries = (maxRetries: number) => (retries: number) => {
+  if (retries >= maxRetries) {
+    return new Error(`Maximum ${maxRetries} reconnection attempts reached`)
+  }
+  return 1000 * Math.pow(2, retries)
+}
+```

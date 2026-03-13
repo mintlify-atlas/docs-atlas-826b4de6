@@ -1,0 +1,122 @@
+---
+title: API Reference Overview
+description: Complete reference for the GRVT JavaScript Client SDK
+---
+
+The GRVT JavaScript Client SDK provides a comprehensive interface for interacting with the Gravity exchange platform. The SDK is organized into three main modules:
+
+## SDK Structure
+
+### MDG (Market Data Gateway)
+
+The MDG class provides access to public market data and vault information without requiring authentication. This includes:
+
+- **Instrument Data**: Query instrument details, filter instruments, and retrieve all available instruments
+- **Market Data**: Access real-time and historical market information including tickers, order books, trades, candlesticks, funding rates, and settlement prices
+- **Vault Data**: Retrieve vault metrics, performance data, positions, and historical information
+
+[View MDG Documentation](/api/mdg/overview)
+
+### TDG (Trading Data Gateway)
+
+The TDG class provides authenticated trading operations and account management:
+
+- **Order Management**: Create, cancel, and query orders
+- **Account Information**: Access account summaries, positions, and balances
+- **Transfers**: Manage deposits, withdrawals, and internal transfers
+- **Vault Operations**: Invest in vaults, redeem investments, and manage vault positions
+
+### WS (WebSocket)
+
+The WebSocket interface provides real-time streaming data feeds for:
+
+- Market data streams (tickers, order books, trades, candlesticks)
+- Account updates (orders, fills, positions, transfers)
+- Vault updates
+
+## Installation
+
+```bash
+npm install @grvt/client
+```
+
+## Basic Usage
+
+```typescript
+import { MDG, TDG } from '@grvt/client';
+
+// Initialize MDG for public market data
+const mdg = new MDG({
+  host: 'https://api.grvt.io',
+  version: 'v1'
+});
+
+// Initialize TDG for authenticated trading
+const tdg = new TDG({
+  host: 'https://api.grvt.io',
+  version: 'v1'
+});
+
+// Fetch instrument data
+const instrument = await mdg.instrument({
+  instrument: 'BTC_USDT_Perp'
+});
+
+// Get ticker information
+const ticker = await mdg.ticker({
+  instrument: 'BTC_USDT_Perp'
+});
+```
+
+## Configuration
+
+The SDK requires a configuration object when initializing MDG or TDG classes:
+
+<ParamField path="config" type="IConfig" required>
+  Configuration object for the SDK
+  
+  <Expandable title="properties">
+    <ParamField path="host" type="string" required>
+      The API host URL (e.g., `https://api.grvt.io`)
+    </ParamField>
+    
+    <ParamField path="version" type="string" required>
+      The API version (e.g., `v1`)
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Axios Integration
+
+Both MDG and TDG classes expose an `axios` property that provides access to the underlying Axios instance:
+
+```typescript
+const mdg = new MDG(config);
+const axiosInstance = mdg.axios;
+```
+
+All methods accept an optional `AxiosRequestConfig` parameter for customizing requests:
+
+```typescript
+const ticker = await mdg.ticker(
+  { instrument: 'BTC_USDT_Perp' },
+  { timeout: 5000 }
+);
+```
+
+## Error Handling
+
+All API methods use a standardized error handling approach. Errors are caught and transformed using the `Utils.coverApiError` utility:
+
+```typescript
+try {
+  const result = await mdg.ticker({ instrument: 'BTC_USDT_Perp' });
+} catch (error) {
+  // Handle API error
+  console.error(error);
+}
+```
+
+## Response Format
+
+API responses are automatically transformed from the lite schema format to the full schema format using the SDK's internal schema mapping utilities. This ensures type-safe responses that match the TypeScript interfaces.

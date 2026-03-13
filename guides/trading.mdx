@@ -1,0 +1,622 @@
+---
+title: Trading Operations
+description: Learn how to manage orders, positions, and account operations using the TDG (Trading Data Gateway) class
+---
+
+The TDG (Trading Data Gateway) class provides comprehensive trading functionality including order management, position tracking, account operations, and transfer management. This guide covers essential trading workflows.
+
+## Initialization
+
+Initialize the TDG client with your configuration:
+
+```typescript
+import { TDG } from '@grvt/client';
+
+const tdg = new TDG({
+  host: 'https://api.grvt.io',
+  version: 'v1' // optional, defaults to 'v1'
+});
+```
+
+<Note>
+All trading operations require authentication. Ensure your requests include proper authentication headers.
+</Note>
+
+## Order Management
+
+### Creating Orders
+
+<Steps>
+  <Step title="Pre-order Check">
+    Before placing an order, validate it with the pre-order check:
+    
+    ```typescript
+    const preCheck = await tdg.preOrderCheck({
+      sub_account_id: 'sub_account_123',
+      instrument: 'BTC_USDT_Perp',
+      size: '1.5',
+      limit_price: '45000',
+      side: 'BUY',
+      time_in_force: 'GTC'
+    });
+    
+    console.log(preCheck.result);
+    // Validates margin requirements and position limits
+    ```
+  </Step>
+  
+  <Step title="Create Single Order">
+    Place a single order:
+    
+    ```typescript
+    const order = await tdg.createOrder({
+      sub_account_id: 'sub_account_123',
+      instrument: 'BTC_USDT_Perp',
+      size: '1.5',
+      limit_price: '45000',
+      side: 'BUY',
+      time_in_force: 'GTC',
+      order_type: 'LIMIT'
+    });
+    
+    console.log(order.result);
+    // Returns order_id and order details
+    ```
+  </Step>
+  
+  <Step title="Create Bulk Orders">
+    Place multiple orders in a single request:
+    
+    ```typescript
+    const bulkOrders = await tdg.createBulkOrders({
+      sub_account_id: 'sub_account_123',
+      orders: [
+        {
+          instrument: 'BTC_USDT_Perp',
+          size: '1.0',
+          limit_price: '45000',
+          side: 'BUY',
+          time_in_force: 'GTC',
+          order_type: 'LIMIT'
+        },
+        {
+          instrument: 'ETH_USDT_Perp',
+          size: '10.0',
+          limit_price: '3000',
+          side: 'BUY',
+          time_in_force: 'GTC',
+          order_type: 'LIMIT'
+        }
+      ]
+    });
+    
+    console.log(bulkOrders.result);
+    ```
+  </Step>
+</Steps>
+
+### Order Types
+
+<Tabs>
+  <Tab title="Limit Order">
+    ```typescript
+    const limitOrder = await tdg.createOrder({
+      sub_account_id: 'sub_account_123',
+      instrument: 'BTC_USDT_Perp',
+      size: '1.5',
+      limit_price: '45000',
+      side: 'BUY',
+      time_in_force: 'GTC',
+      order_type: 'LIMIT'
+    });
+    ```
+  </Tab>
+  
+  <Tab title="Market Order">
+    ```typescript
+    const marketOrder = await tdg.createOrder({
+      sub_account_id: 'sub_account_123',
+      instrument: 'BTC_USDT_Perp',
+      size: '1.5',
+      side: 'BUY',
+      order_type: 'MARKET'
+    });
+    ```
+  </Tab>
+  
+  <Tab title="Post-Only Order">
+    ```typescript
+    const postOnlyOrder = await tdg.createOrder({
+      sub_account_id: 'sub_account_123',
+      instrument: 'BTC_USDT_Perp',
+      size: '1.5',
+      limit_price: '45000',
+      side: 'BUY',
+      time_in_force: 'GTC',
+      order_type: 'LIMIT',
+      post_only: true
+    });
+    ```
+  </Tab>
+</Tabs>
+
+### Canceling Orders
+
+#### Cancel a Single Order
+
+```typescript
+const cancelResult = await tdg.cancelOrder({
+  sub_account_id: 'sub_account_123',
+  order_id: 'order_456'
+});
+
+console.log(cancelResult.result);
+```
+
+#### Cancel All Orders
+
+Cancel all open orders, optionally filtered by instrument:
+
+```typescript
+// Cancel all orders for a specific instrument
+const cancelAll = await tdg.cancelAllOrders({
+  sub_account_id: 'sub_account_123',
+  instrument: 'BTC_USDT_Perp'
+});
+
+// Cancel all orders across all instruments
+const cancelAllInstruments = await tdg.cancelAllOrders({
+  sub_account_id: 'sub_account_123'
+});
+
+console.log(cancelAll.result);
+```
+
+### Querying Orders
+
+#### Get Single Order
+
+```typescript
+const orderDetails = await tdg.order({
+  sub_account_id: 'sub_account_123',
+  order_id: 'order_456'
+});
+
+console.log(orderDetails.result);
+```
+
+#### Get Open Orders
+
+```typescript
+const openOrders = await tdg.openOrders({
+  sub_account_id: 'sub_account_123',
+  instrument: 'BTC_USDT_Perp' // optional filter
+});
+
+console.log(openOrders.result);
+```
+
+#### Get Order History
+
+```typescript
+const orderHistory = await tdg.orderHistory({
+  sub_account_id: 'sub_account_123',
+  instrument: 'BTC_USDT_Perp',
+  start_time: '1640000000000000',
+  end_time: '1640086400000000',
+  limit: 100
+});
+
+console.log(orderHistory.result);
+```
+
+### Advanced Order Features
+
+#### Replace Orders (TP/SL)
+
+Replace take-profit and stop-loss orders for a position:
+
+```typescript
+const replaceResult = await tdg.replaceOrders({
+  sub_account_id: 'sub_account_123',
+  instrument: 'BTC_USDT_Perp',
+  take_profit_price: '50000',
+  stop_loss_price: '42000'
+});
+
+console.log(replaceResult.result);
+```
+
+#### Get Order Group
+
+```typescript
+const orderGroup = await tdg.orderGroup({
+  sub_account_id: 'sub_account_123',
+  order_group_id: 'group_789'
+});
+
+console.log(orderGroup.result);
+```
+
+## Position Management
+
+### Get Current Positions
+
+```typescript
+const positions = await tdg.positions({
+  sub_account_id: 'sub_account_123',
+  instrument: 'BTC_USDT_Perp' // optional filter
+});
+
+console.log(positions.result);
+// Returns array of positions with size, entry price, unrealized PnL, etc.
+```
+
+### Set Position Configuration
+
+Configure margin mode (cross/isolated) for positions:
+
+```typescript
+const configResult = await tdg.setPositionConfig({
+  sub_account_id: 'sub_account_123',
+  instrument: 'BTC_USDT_Perp',
+  margin_mode: 'ISOLATED',
+  leverage: '10'
+});
+
+console.log(configResult.result);
+```
+
+### Manage Isolated Position Margin
+
+#### Add Margin to Isolated Position
+
+```typescript
+const addMarginResult = await tdg.addPositionMargin({
+  sub_account_id: 'sub_account_123',
+  instrument: 'BTC_USDT_Perp',
+  amount: '1000' // USDT amount to add
+});
+
+console.log(addMarginResult.result);
+```
+
+#### Get Position Margin Limits
+
+```typescript
+const marginLimits = await tdg.getPositionMarginLimits({
+  sub_account_id: 'sub_account_123',
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log(marginLimits.result);
+```
+
+### Close Position (Dedust)
+
+Close small remaining positions:
+
+```typescript
+const dedustResult = await tdg.dedustPosition({
+  sub_account_id: 'sub_account_123',
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log(dedustResult.result);
+```
+
+## Leverage Management
+
+### Get All Initial Leverage Settings
+
+```typescript
+const leverageSettings = await tdg.getAllInitialLeverage({
+  sub_account_id: 'sub_account_123'
+});
+
+console.log(leverageSettings.result);
+```
+
+### Set Initial Leverage
+
+```typescript
+const setLeverageResult = await tdg.setInitialLeverage({
+  sub_account_id: 'sub_account_123',
+  instrument: 'BTC_USDT_Perp',
+  leverage: '10'
+});
+
+console.log(setLeverageResult.result);
+```
+
+### Get Margin Tiers
+
+```typescript
+const marginTiers = await tdg.getMarginTiers();
+
+console.log(marginTiers.result);
+// Returns margin tier information for different position sizes
+```
+
+## Account Management
+
+### Sub-Account Summary
+
+Get a snapshot of your sub-account:
+
+```typescript
+const accountSummary = await tdg.subAccountSummary({
+  sub_account_id: 'sub_account_123'
+});
+
+console.log(accountSummary.result);
+// Returns equity, available balance, margin usage, positions, etc.
+```
+
+### Sub-Account History
+
+Retrieve historical account snapshots:
+
+```typescript
+const accountHistory = await tdg.subAccountHistory({
+  sub_account_id: 'sub_account_123',
+  start_time: '1640000000000000',
+  end_time: '1640086400000000'
+});
+
+console.log(accountHistory.result);
+```
+
+### Aggregated Account Summary
+
+Get aggregated data across all sub-accounts:
+
+```typescript
+const aggregatedSummary = await tdg.aggregatedAccountSummary();
+
+console.log(aggregatedSummary.result);
+```
+
+### Funding Account Summary
+
+```typescript
+const fundingAccount = await tdg.fundingAccountSummary();
+
+console.log(fundingAccount.result);
+// Returns funding account balance and available funds
+```
+
+## Fill History
+
+Retrieve your trade execution history:
+
+```typescript
+const fillHistory = await tdg.fillHistory({
+  sub_account_id: 'sub_account_123',
+  instrument: 'BTC_USDT_Perp',
+  start_time: '1640000000000000',
+  end_time: '1640086400000000',
+  limit: 100
+});
+
+console.log(fillHistory.result);
+// Array of fills with price, size, fee, and execution details
+```
+
+## Transfers and Withdrawals
+
+### Internal Transfer
+
+Transfer funds between sub-accounts:
+
+```typescript
+const transferResult = await tdg.transfer({
+  from_account_id: 'main_account',
+  from_sub_account_id: 'sub_account_123',
+  to_account_id: 'main_account',
+  to_sub_account_id: 'sub_account_456',
+  currency: 'USDT',
+  amount: '1000'
+});
+
+console.log(transferResult.result);
+```
+
+### Transfer History
+
+```typescript
+const transferHistory = await tdg.transferHistory({
+  sub_account_id: 'sub_account_123',
+  start_time: '1640000000000000',
+  end_time: '1640086400000000'
+});
+
+console.log(transferHistory.result);
+```
+
+### Withdrawal
+
+Initiate a withdrawal from your account:
+
+```typescript
+const withdrawal = await tdg.withdrawal({
+  sub_account_id: 'sub_account_123',
+  currency: 'USDT',
+  amount: '1000',
+  to_address: '0x...'
+});
+
+console.log(withdrawal.result);
+```
+
+### Withdrawal History
+
+```typescript
+const withdrawalHistory = await tdg.withdrawalHistory({
+  sub_account_id: 'sub_account_123',
+  start_time: '1640000000000000',
+  end_time: '1640086400000000'
+});
+
+console.log(withdrawalHistory.result);
+```
+
+### Deposit History
+
+```typescript
+const depositHistory = await tdg.depositHistory({
+  main_account_id: 'main_account',
+  start_time: '1640000000000000',
+  end_time: '1640086400000000'
+});
+
+console.log(depositHistory.result);
+```
+
+## Funding Payments
+
+### Funding Payment History
+
+Get historical funding payments:
+
+```typescript
+const fundingPayments = await tdg.fundingPaymentHistory({
+  sub_account_id: 'sub_account_123',
+  instrument: 'BTC_USDT_Perp',
+  start_time: '1640000000000000',
+  end_time: '1640086400000000'
+});
+
+console.log(fundingPayments.result);
+```
+
+## Risk Management
+
+### Get Price Protection Bands
+
+```typescript
+const priceBands = await tdg.getPriceProtectionBands();
+
+console.log(priceBands.result);
+// Returns price protection limits to prevent fat-finger errors
+```
+
+### Socialized Loss Status
+
+```typescript
+const lossStatus = await tdg.socializedLossStatus();
+
+console.log(lossStatus.result);
+```
+
+## Trading Performance
+
+### Get Trading Performance
+
+```typescript
+const performance = await tdg.tradingPerformance({
+  sub_account_id: 'sub_account_123',
+  start_time: '1640000000000000',
+  end_time: '1640086400000000'
+});
+
+console.log(performance.result);
+// Returns PnL, ROI, trade count, win rate, etc.
+```
+
+### Trading Performance Trend
+
+```typescript
+const performanceTrend = await tdg.tradingPerformanceTrend({
+  sub_account_id: 'sub_account_123',
+  interval: '1D',
+  start_time: '1640000000000000',
+  end_time: '1640086400000000'
+});
+
+console.log(performanceTrend.result);
+```
+
+### Trading Performance Summary
+
+```typescript
+const performanceSummary = await tdg.tradingPerformanceSummary({
+  sub_account_id: 'sub_account_123'
+});
+
+console.log(performanceSummary.result);
+```
+
+## Builder Integration
+
+### Authorize Builder
+
+Authorize a third-party builder to trade on your behalf:
+
+```typescript
+const authResult = await tdg.authorizeBuilder({
+  builder_account_id: 'builder_account',
+  permissions: ['TRADE', 'CANCEL']
+});
+
+console.log(authResult.result);
+```
+
+### Get Authorized Builders
+
+```typescript
+const authorizedBuilders = await tdg.getAuthorizedBuilders();
+
+console.log(authorizedBuilders.result);
+```
+
+### Builder Fill History
+
+```typescript
+const builderFills = await tdg.builderFillHistory({
+  builder_account_id: 'builder_account',
+  start_time: '1640000000000000',
+  end_time: '1640086400000000'
+});
+
+console.log(builderFills.result);
+```
+
+## Error Handling
+
+Implement comprehensive error handling for trading operations:
+
+```typescript
+try {
+  const order = await tdg.createOrder({
+    sub_account_id: 'sub_account_123',
+    instrument: 'BTC_USDT_Perp',
+    size: '1.5',
+    limit_price: '45000',
+    side: 'BUY',
+    time_in_force: 'GTC',
+    order_type: 'LIMIT'
+  });
+  console.log('Order created:', order.result);
+} catch (error) {
+  console.error('Order failed:', error.message);
+  
+  // Handle specific error cases
+  if (error.code === 'INSUFFICIENT_MARGIN') {
+    console.error('Not enough margin to place order');
+  } else if (error.code === 'INVALID_PRICE') {
+    console.error('Price is outside acceptable bounds');
+  }
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="WebSocket Trading" icon="bolt" href="/guides/websockets">
+    Stream real-time order and position updates via WebSocket
+  </Card>
+  <Card title="TypeScript Types" icon="code" href="/guides/typescript-usage">
+    Explore TypeScript interfaces and type definitions
+  </Card>
+</CardGroup>

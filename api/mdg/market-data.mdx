@@ -1,0 +1,568 @@
+---
+title: Market Data Methods
+description: Access real-time and historical market data
+---
+
+Market data methods provide access to real-time and historical trading data including tickers, order books, trades, candlesticks, funding rates, and settlement prices.
+
+## ticker
+
+Get comprehensive ticker information for an instrument including prices, volume, and 24-hour statistics.
+
+```typescript
+ticker(payload: IApiTickerRequest, config?: AxiosRequestConfig): Promise<IApiTickerResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiTickerRequest" required>
+  <Expandable title="properties">
+    <ParamField path="instrument" type="string" required>
+      The readable instrument name (e.g., `BTC_USDT_Perp`, `ETH_USDT_Fut_20Oct23`)
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiTickerResponse">
+  Contains comprehensive ticker data including prices, volumes, and statistics
+</ResponseField>
+
+### Example
+
+```typescript
+const ticker = await mdg.ticker({
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log(`Last price: ${ticker.result.last_price}`);
+```
+
+### API Reference
+
+[Official Documentation](https://api-docs.grvt.io/market_data_api/#ticker)
+
+---
+
+## miniTicker
+
+Get lightweight ticker data with essential price information.
+
+```typescript
+miniTicker(payload: IApiMiniTickerRequest, config?: AxiosRequestConfig): Promise<IApiMiniTickerResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiMiniTickerRequest" required>
+  <Expandable title="properties">
+    <ParamField path="instrument" type="string" required>
+      The readable instrument name
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiMiniTickerResponse">
+  Contains lightweight ticker data
+</ResponseField>
+
+### Example
+
+```typescript
+const miniTicker = await mdg.miniTicker({
+  instrument: 'ETH_USDT_Perp'
+});
+```
+
+### API Reference
+
+[Official Documentation](https://api-docs.grvt.io/market_data_api/#mini-ticker)
+
+---
+
+## orderBook
+
+Get order book levels showing bids and asks for an instrument.
+
+```typescript
+orderBook(payload: IApiOrderbookLevelsRequest, config?: AxiosRequestConfig): Promise<IApiOrderbookLevelsResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiOrderbookLevelsRequest" required>
+  <Expandable title="properties">
+    <ParamField path="instrument" type="string" required>
+      The readable instrument name
+    </ParamField>
+    
+    <ParamField path="depth" type="number">
+      Number of price levels to return (default and max vary by endpoint)
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiOrderbookLevelsResponse">
+  Contains order book levels with bids and asks
+  
+  <Expandable title="properties">
+    <ResponseField name="bids" type="PriceLevel[]">
+      Array of bid price levels
+    </ResponseField>
+    
+    <ResponseField name="asks" type="PriceLevel[]">
+      Array of ask price levels
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```typescript
+const orderBook = await mdg.orderBook({
+  instrument: 'BTC_USDT_Perp',
+  depth: 20
+});
+
+console.log('Best bid:', orderBook.result.bids[0]);
+console.log('Best ask:', orderBook.result.asks[0]);
+```
+
+### API Reference
+
+[Official Documentation](https://api-docs.grvt.io/market_data_api/#orderbook)
+
+---
+
+## trade
+
+Get the most recent trade data for an instrument.
+
+```typescript
+trade(payload: IApiTradeRequest, config?: AxiosRequestConfig): Promise<IApiTradeResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiTradeRequest" required>
+  <Expandable title="properties">
+    <ParamField path="instrument" type="string" required>
+      The readable instrument name
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiTradeResponse">
+  Contains the most recent trade information
+</ResponseField>
+
+### Example
+
+```typescript
+const trade = await mdg.trade({
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log('Last trade price:', trade.result.price);
+```
+
+### API Reference
+
+[Official Documentation](https://api-docs.grvt.io/market_data_api/#trade_1)
+
+---
+
+## tradesHistory
+
+Get historical trades for an instrument with pagination support.
+
+```typescript
+tradesHistory(payload: IApiTradeHistoryRequest, config?: AxiosRequestConfig): Promise<IApiTradeHistoryResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiTradeHistoryRequest" required>
+  <Expandable title="properties">
+    <ParamField path="instrument" type="string" required>
+      The readable instrument name
+    </ParamField>
+    
+    <ParamField path="start_time" type="string">
+      Start time in unix nanoseconds
+    </ParamField>
+    
+    <ParamField path="end_time" type="string">
+      End time in unix nanoseconds
+    </ParamField>
+    
+    <ParamField path="limit" type="number">
+      Maximum number of records to return (defaults to 500, max 1000)
+    </ParamField>
+    
+    <ParamField path="cursor" type="string">
+      Pagination cursor for fetching the next page
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiTradeHistoryResponse">
+  <Expandable title="properties">
+    <ResponseField name="result" type="Trade[]">
+      Array of historical trades
+    </ResponseField>
+    
+    <ResponseField name="next" type="string">
+      Pagination cursor for the next page
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```typescript
+const history = await mdg.tradesHistory({
+  instrument: 'BTC_USDT_Perp',
+  limit: 100
+});
+
+console.log(`Retrieved ${history.result.length} trades`);
+
+// Fetch next page if available
+if (history.next) {
+  const nextPage = await mdg.tradesHistory({
+    instrument: 'BTC_USDT_Perp',
+    cursor: history.next
+  });
+}
+```
+
+### API Reference
+
+[Official Documentation](https://api-docs.grvt.io/market_data_api/#trade-history)
+
+---
+
+## candlestick
+
+Get OHLCV candlestick data for technical analysis.
+
+```typescript
+candlestick(payload: IApiCandlestickRequest, config?: AxiosRequestConfig): Promise<IApiCandlestickResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiCandlestickRequest" required>
+  <Expandable title="properties">
+    <ParamField path="instrument" type="string" required>
+      The readable instrument name
+    </ParamField>
+    
+    <ParamField path="interval" type="ECandlestickInterval" required>
+      Candlestick interval (e.g., `1m`, `5m`, `15m`, `1h`, `4h`, `1d`)
+    </ParamField>
+    
+    <ParamField path="type" type="ECandlestickType">
+      Type of candlestick data (trade, mark, index, mid). Note: For spot instruments, only `trade` and `mid` are available
+    </ParamField>
+    
+    <ParamField path="start_time" type="string">
+      Start time in unix nanoseconds
+    </ParamField>
+    
+    <ParamField path="end_time" type="string">
+      End time in unix nanoseconds
+    </ParamField>
+    
+    <ParamField path="limit" type="number">
+      Maximum number of candlesticks to return (defaults to 500, max 1000)
+    </ParamField>
+    
+    <ParamField path="cursor" type="string">
+      Pagination cursor
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiCandlestickResponse">
+  <Expandable title="properties">
+    <ResponseField name="result" type="ICandlestick[]">
+      Array of candlestick data
+    </ResponseField>
+    
+    <ResponseField name="next" type="string">
+      Pagination cursor for the next page
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example
+
+```typescript
+const candlesticks = await mdg.candlestick({
+  instrument: 'BTC_USDT_Perp',
+  interval: '1h',
+  type: 'trade',
+  limit: 100
+});
+
+candlesticks.result.forEach(candle => {
+  console.log(`Open: ${candle.open}, High: ${candle.high}, Low: ${candle.low}, Close: ${candle.close}`);
+});
+```
+
+### API Reference
+
+[Official Documentation](https://api-docs.grvt.io/market_data_api/#candlestick)
+
+---
+
+## funding
+
+Get funding rate information for perpetual instruments.
+
+```typescript
+funding(payload: IApiFundingRateRequest, config?: AxiosRequestConfig): Promise<IApiFundingRateResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiFundingRateRequest" required>
+  <Expandable title="properties">
+    <ParamField path="instrument" type="string" required>
+      The readable instrument name (must be a perpetual)
+    </ParamField>
+    
+    <ParamField path="start_time" type="string">
+      Start time in unix nanoseconds
+    </ParamField>
+    
+    <ParamField path="end_time" type="string">
+      End time in unix nanoseconds
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiFundingRateResponse">
+  Contains funding rate information
+</ResponseField>
+
+### Example
+
+```typescript
+const funding = await mdg.funding({
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log('Current funding rate:', funding.result.funding_rate);
+```
+
+### API Reference
+
+[Official Documentation](https://api-docs.grvt.io/market_data_api/#funding-rate)
+
+---
+
+## settlement
+
+Get settlement price data for instruments.
+
+```typescript
+settlement(payload: IApiSettlementPriceRequest, config?: AxiosRequestConfig): Promise<IApiSettlementPriceResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiSettlementPriceRequest" required>
+  <Expandable title="properties">
+    <ParamField path="instrument" type="string">
+      The readable instrument name
+    </ParamField>
+    
+    <ParamField path="settlement_time" type="string">
+      Settlement time to query in unix nanoseconds
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiSettlementPriceResponse">
+  Contains settlement price information
+</ResponseField>
+
+### Example
+
+```typescript
+const settlement = await mdg.settlement({
+  instrument: 'BTC_USDT_Fut_20Oct23'
+});
+```
+
+### API Reference
+
+[Official Documentation](https://api-docs.grvt.io/market_data_api/#settlement-price)
+
+---
+
+## liveFundingRateComparison
+
+Compare live funding rates across multiple exchanges or instruments.
+
+```typescript
+liveFundingRateComparison(payload: IApiLiveFundingRateComparisonRequest, config?: AxiosRequestConfig): Promise<IApiLiveFundingRateComparisonResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiLiveFundingRateComparisonRequest" required>
+  Request payload for live funding rate comparison
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiLiveFundingRateComparisonResponse">
+  Contains comparative funding rate data
+</ResponseField>
+
+### Example
+
+```typescript
+const comparison = await mdg.liveFundingRateComparison({
+  instruments: ['BTC_USDT_Perp', 'ETH_USDT_Perp']
+});
+```
+
+---
+
+## fundingHistoryComparison
+
+Compare historical funding rates across multiple exchanges or instruments.
+
+```typescript
+fundingHistoryComparison(payload: IApiFundingHistoryComparisonRequest, config?: AxiosRequestConfig): Promise<IApiFundingHistoryComparisonResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiFundingHistoryComparisonRequest" required>
+  <Expandable title="properties">
+    <ParamField path="instruments" type="string[]">
+      List of instruments to compare
+    </ParamField>
+    
+    <ParamField path="start_time" type="string">
+      Start time in unix nanoseconds
+    </ParamField>
+    
+    <ParamField path="end_time" type="string">
+      End time in unix nanoseconds
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiFundingHistoryComparisonResponse">
+  Contains historical funding rate comparison data
+</ResponseField>
+
+### Example
+
+```typescript
+const historyComparison = await mdg.fundingHistoryComparison({
+  instruments: ['BTC_USDT_Perp', 'ETH_USDT_Perp'],
+  start_time: '1634000000000000000',
+  end_time: '1634086400000000000'
+});
+```
+
+---
+
+## marginRules
+
+Get margin rules and requirements for instruments.
+
+```typescript
+marginRules(payload: IApiGetMarginRulesRequest, config?: AxiosRequestConfig): Promise<IApiGetMarginRulesResponse>
+```
+
+### Parameters
+
+<ParamField path="payload" type="IApiGetMarginRulesRequest" required>
+  Request payload for margin rules
+</ParamField>
+
+<ParamField path="config" type="AxiosRequestConfig">
+  Optional Axios request configuration
+</ParamField>
+
+### Response
+
+<ResponseField name="result" type="IApiGetMarginRulesResponse">
+  Contains margin rules and requirements
+</ResponseField>
+
+### Example
+
+```typescript
+const marginRules = await mdg.marginRules({
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log('Margin requirements:', marginRules.result);
+```

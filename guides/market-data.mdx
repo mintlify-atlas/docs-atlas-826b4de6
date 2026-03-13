@@ -1,0 +1,318 @@
+---
+title: Market Data
+description: Learn how to fetch and stream market data using the MDG (Market Data Gateway) class
+---
+
+The MDG (Market Data Gateway) class provides access to real-time and historical market data from the GRVT exchange. This guide covers the most common operations for retrieving instruments, prices, orderbook data, and market statistics.
+
+## Initialization
+
+First, initialize the MDG client with your configuration:
+
+```typescript
+import { MDG } from '@grvt/client';
+
+const mdg = new MDG({
+  host: 'https://api.grvt.io',
+  version: 'v1' // optional, defaults to 'v1'
+});
+```
+
+## Retrieving Instruments
+
+### Get a Single Instrument
+
+Fetch detailed information about a specific trading instrument:
+
+```typescript
+const instrumentData = await mdg.instrument({
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log(instrumentData);
+// Returns instrument details including tick size, lot size, and contract specifications
+```
+
+### Get Filtered Instruments
+
+Query instruments with specific filters:
+
+```typescript
+const instruments = await mdg.instruments({
+  kind: 'PERPETUAL',
+  base: 'BTC'
+});
+
+console.log(instruments.result);
+// Returns array of instruments matching the filter criteria
+```
+
+### Get All Instruments
+
+Retrieve all available instruments on the exchange:
+
+```typescript
+const allInstruments = await mdg.allInstruments({
+  // Optional filters can be applied here
+});
+
+console.log(allInstruments.result);
+```
+
+## Price Data
+
+### Mini Ticker
+
+Get lightweight price information with minimal data:
+
+```typescript
+const miniTicker = await mdg.miniTicker({
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log(miniTicker.result);
+// { last_price, timestamp, ... }
+```
+
+### Full Ticker
+
+Retrieve comprehensive ticker data including 24h statistics:
+
+```typescript
+const ticker = await mdg.ticker({
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log(ticker.result);
+// Includes: last_price, mark_price, index_price, 24h_volume, 24h_high, 24h_low, etc.
+```
+
+## Orderbook Data
+
+### Get Orderbook Levels
+
+Fetch the current orderbook with bid and ask levels:
+
+```typescript
+const orderbook = await mdg.orderBook({
+  instrument: 'BTC_USDT_Perp',
+  depth: 20 // Number of levels to retrieve
+});
+
+console.log(orderbook.result);
+// { bids: [[price, size], ...], asks: [[price, size], ...] }
+```
+
+<Note>
+The orderbook data includes price levels sorted by best price first. Bids are in descending order, asks in ascending order.
+</Note>
+
+## Trade History
+
+### Recent Trades
+
+Get the most recent public trades for an instrument:
+
+```typescript
+const recentTrade = await mdg.trade({
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log(recentTrade.result);
+```
+
+### Historical Trade Data
+
+Query historical trades with pagination:
+
+```typescript
+const tradeHistory = await mdg.tradesHistory({
+  instrument: 'BTC_USDT_Perp',
+  start_time: '1640000000000000', // Unix timestamp in microseconds
+  end_time: '1640086400000000',
+  limit: 100
+});
+
+console.log(tradeHistory.result);
+// Array of trades with price, size, timestamp, and side information
+```
+
+## Candlestick Data
+
+Retrieve OHLCV (Open, High, Low, Close, Volume) data for charting:
+
+```typescript
+const candlesticks = await mdg.candlestick({
+  instrument: 'BTC_USDT_Perp',
+  interval: '1H', // Options: '1M', '5M', '15M', '1H', '4H', '1D', etc.
+  start_time: '1640000000000000',
+  end_time: '1640086400000000'
+});
+
+console.log(candlesticks.result);
+// Array of [timestamp, open, high, low, close, volume]
+```
+
+<Tabs>
+  <Tab title="1 Hour Candles">
+    ```typescript
+    const hourlyCandles = await mdg.candlestick({
+      instrument: 'BTC_USDT_Perp',
+      interval: '1H'
+    });
+    ```
+  </Tab>
+  <Tab title="1 Day Candles">
+    ```typescript
+    const dailyCandles = await mdg.candlestick({
+      instrument: 'BTC_USDT_Perp',
+      interval: '1D'
+    });
+    ```
+  </Tab>
+</Tabs>
+
+## Funding Rates
+
+### Current Funding Rate
+
+Get the current funding rate for a perpetual contract:
+
+```typescript
+const fundingRate = await mdg.funding({
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log(fundingRate.result);
+// { funding_rate, next_funding_time, ... }
+```
+
+### Live Funding Rate Comparison
+
+Compare funding rates across different venues:
+
+```typescript
+const fundingComparison = await mdg.liveFundingRateComparison({
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log(fundingComparison.result);
+```
+
+### Funding History Comparison
+
+Retrieve historical funding rate data across venues:
+
+```typescript
+const fundingHistory = await mdg.fundingHistoryComparison({
+  instrument: 'BTC_USDT_Perp',
+  start_time: '1640000000000000',
+  end_time: '1640086400000000'
+});
+
+console.log(fundingHistory.result);
+```
+
+## Settlement Prices
+
+Get settlement prices for derivatives contracts:
+
+```typescript
+const settlement = await mdg.settlement({
+  instrument: 'BTC_USDT_Perp',
+  settlement_time: '1640086400000000'
+});
+
+console.log(settlement.result);
+```
+
+## Margin Rules
+
+Retrieve margin requirements for instruments:
+
+```typescript
+const marginRules = await mdg.marginRules({
+  instrument: 'BTC_USDT_Perp'
+});
+
+console.log(marginRules.result);
+// Returns initial margin, maintenance margin, and liquidation parameters
+```
+
+## Vault Data
+
+The MDG also provides access to vault-related market data:
+
+<Steps>
+  <Step title="Get Vault Details">
+    ```typescript
+    const vaultDetail = await mdg.vaultDetail({
+      vault_ids: ['vault_123']
+    });
+    ```
+  </Step>
+  
+  <Step title="Query Vault Performance">
+    ```typescript
+    const vaultPerformance = await mdg.vaultPerformance({
+      vault_ids: ['vault_123'],
+      start_time: '1640000000000000',
+      end_time: '1640086400000000'
+    });
+    ```
+  </Step>
+  
+  <Step title="Get Vault Risk Metrics">
+    ```typescript
+    const vaultRiskMetrics = await mdg.vaultRiskMetric({
+      vault_ids: ['vault_123']
+    });
+    ```
+  </Step>
+</Steps>
+
+## Error Handling
+
+All MDG methods return promises and may throw errors. Always implement proper error handling:
+
+```typescript
+try {
+  const ticker = await mdg.ticker({
+    instrument: 'BTC_USDT_Perp'
+  });
+  console.log(ticker.result);
+} catch (error) {
+  console.error('Failed to fetch ticker:', error.message);
+  // Handle specific error cases
+  if (error.status === 404) {
+    console.error('Instrument not found');
+  }
+}
+```
+
+## Custom Axios Configuration
+
+You can pass custom Axios configuration to any MDG method:
+
+```typescript
+const ticker = await mdg.ticker(
+  { instrument: 'BTC_USDT_Perp' },
+  {
+    timeout: 5000,
+    headers: {
+      'Custom-Header': 'value'
+    }
+  }
+);
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="WebSocket Streaming" icon="broadcast-tower" href="/guides/websockets">
+    Stream real-time market data updates via WebSocket
+  </Card>
+  <Card title="Trading Operations" icon="chart-line" href="/guides/trading">
+    Learn how to place and manage orders using the TDG class
+  </Card>
+</CardGroup>
