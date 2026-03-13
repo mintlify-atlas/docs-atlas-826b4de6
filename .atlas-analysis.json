@@ -1,0 +1,132 @@
+{
+  "projectType": "sdk-library",
+  "projectName": "GRVT JavaScript Client",
+  "projectDescription": "Node.js & JavaScript SDK for GRVT REST APIs & WebSockets",
+  "theme": "sequoia",
+  "primaryColor": "#848c8e",
+  "lightColor": "#11161e",
+  "darkColor": "#cfd0d2",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/configuration",
+              "concepts/authentication",
+              "concepts/error-handling"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/market-data",
+              "guides/trading",
+              "guides/websockets",
+              "guides/typescript-usage"
+            ]
+          },
+          {
+            "group": "Examples",
+            "pages": [
+              "examples/basic-usage",
+              "examples/market-data-examples",
+              "examples/trading-examples",
+              "examples/websocket-examples"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api/overview"
+            ]
+          },
+          {
+            "group": "Market Data Gateway (MDG)",
+            "pages": [
+              "api/mdg/overview",
+              "api/mdg/instruments",
+              "api/mdg/market-data",
+              "api/mdg/vault-data"
+            ]
+          },
+          {
+            "group": "Trading Data Gateway (TDG)",
+            "pages": [
+              "api/tdg/overview",
+              "api/tdg/orders",
+              "api/tdg/positions",
+              "api/tdg/account",
+              "api/tdg/transfers",
+              "api/tdg/vault-operations"
+            ]
+          },
+          {
+            "group": "WebSocket",
+            "pages": [
+              "api/websocket/overview",
+              "api/websocket/connection",
+              "api/websocket/streams"
+            ]
+          },
+          {
+            "group": "Types & Interfaces",
+            "pages": [
+              "api/types/configuration",
+              "api/types/requests",
+              "api/types/responses",
+              "api/types/enums"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Market Data Gateway (MDG) for accessing instruments, tickers, orderbooks, trades, and candlesticks",
+    "Trading Data Gateway (TDG) for order management, positions, account operations, and transfers",
+    "WebSocket support for real-time market data streaming",
+    "Full TypeScript support with comprehensive type definitions",
+    "Vault operations for both market data and trading",
+    "Built-in error handling and schema mapping"
+  ],
+  "publicApiSurface": [
+    "MDG.instrument()",
+    "MDG.instruments()",
+    "MDG.allInstruments()",
+    "MDG.miniTicker()",
+    "MDG.ticker()",
+    "MDG.orderBook()",
+    "MDG.trade()",
+    "MDG.tradesHistory()",
+    "MDG.settlement()",
+    "MDG.funding()",
+    "MDG.candlestick()",
+    "MDG.vaultAssetExposure()",
+    "TDG.createOrder()",
+    "TDG.cancelOrder()",
+    "TDG.cancelAllOrders()",
+    "TDG.openOrders()",
+    "TDG.orderHistory()",
+    "TDG.positions()",
+    "TDG.subAccountSummary()",
+    "TDG.transfer()",
+    "TDG.withdrawal()",
+    "WS (WebSocket connection)"
+  ]
+}
